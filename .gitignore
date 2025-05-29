@@ -7,6 +7,19 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
+# MediSecure Security - AWS & Sensitive Information
+.env.aws
+.env.local
+.env.production
+.env.development
+.aws/
+aws-credentials.json
+*.pem
+*.p12
+*.key
+config/secrets.json
+# Note: .env.aws.template is safe to commit (contains no secrets)
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 

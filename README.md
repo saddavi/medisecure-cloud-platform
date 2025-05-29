@@ -54,15 +54,21 @@ MediSecure Cloud addresses real-world healthcare coordination challenges in Qata
 
 ## 🚀 Quick Start
 
+> **🔒 Security First**: See [AWS Setup Guide](docs/AWS-SETUP.md) for secure configuration
+
 ```bash
 # Clone the repository
-git clone https://github.com/saddavi/medisecure-cloud-platform.git
+git clone https://github.com/YOUR_USERNAME/medisecure-cloud-platform.git
 cd medisecure-cloud-platform
 
-# Set up AWS credentials (using personal account: saddavi@live.com)
+# Set up AWS credentials (see docs/AWS-SETUP.md for details)
+cp .env.aws.template .env.aws
+# Edit .env.aws with your AWS account details
+
+# Configure AWS CLI
 aws configure
 
-# Check AWS account and region
+# Verify connection and region
 aws sts get-caller-identity
 aws configure list
 
