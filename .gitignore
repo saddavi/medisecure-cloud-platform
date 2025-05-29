@@ -134,3 +134,42 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Healthcare Platform Specific
+# AWS
+.aws/
+aws-exports.js
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+*.tfplan
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Healthcare data (never commit)
+patient-data/
+test-data/
+medical-records/
+
+# Secrets and credentials
+secrets.json
+credentials.json
+*.pem
+*.key
+config/production.json
+
+# Production builds
+/frontend/build
+/frontend/dist
