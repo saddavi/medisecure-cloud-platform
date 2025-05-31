@@ -30,6 +30,7 @@ import {
   CognitoConfig,
 } from "../types";
 import { log, LogLevel, getEnvVar } from "../utils/response";
+import { createHmac } from "crypto";
 
 export class CognitoService {
   private client: CognitoIdentityProviderClient;
@@ -40,6 +41,7 @@ export class CognitoService {
     this.config = {
       userPoolId: getEnvVar("COGNITO_USER_POOL_ID", "ap-south-1_4Cr7XFUmS"),
       clientId: getEnvVar("COGNITO_CLIENT_ID", "34oik0kokq9l20kiqs3kvth2li"),
+      clientSecret: getEnvVar("COGNITO_CLIENT_SECRET"),
       region: getEnvVar("AWS_REGION", "ap-south-1"),
     };
 
@@ -51,6 +53,26 @@ export class CognitoService {
       userPoolId: this.config.userPoolId,
       region: this.config.region,
     });
+  }
+
+  // ============= SECRET_HASH Generation =============
+
+  /**
+   * Generates SECRET_HASH required for Cognito operations when client secret is used
+   * @param username - The username (email in our case)
+   * @returns The computed SECRET_HASH
+   */
+  private generateSecretHash(username: string): string | undefined {
+    if (!this.config.clientSecret) {
+      return undefined;
+    }
+
+    const message = username + this.config.clientId;
+    const hash = createHmac("sha256", this.config.clientSecret)
+      .update(message)
+      .digest("base64");
+
+    return hash;
   }
 
   // ============= User Registration =============
@@ -70,10 +92,12 @@ export class CognitoService {
         lastName: userData.lastName,
       });
 
+      const secretHash = this.generateSecretHash(userData.email);
       const command = new SignUpCommand({
         ClientId: this.config.clientId,
         Username: userData.email,
         Password: userData.password,
+        ...(secretHash && { SecretHash: secretHash }),
         UserAttributes: [
           {
             Name: "email",
@@ -103,18 +127,6 @@ export class CognitoService {
                 },
               ]
             : []),
-          {
-            Name: "custom:accepted_terms",
-            Value: userData.acceptedTerms.toString(),
-          },
-          {
-            Name: "custom:accepted_privacy",
-            Value: userData.acceptedPrivacyPolicy.toString(),
-          },
-          {
-            Name: "custom:registration_timestamp",
-            Value: new Date().toISOString(),
-          },
         ],
       });
 
@@ -158,13 +170,20 @@ export class CognitoService {
         email: loginData.email,
       });
 
+      const secretHash = this.generateSecretHash(loginData.email);
+      const authParameters: Record<string, string> = {
+        USERNAME: loginData.email,
+        PASSWORD: loginData.password,
+      };
+      
+      if (secretHash) {
+        authParameters.SECRET_HASH = secretHash;
+      }
+
       const command = new InitiateAuthCommand({
         ClientId: this.config.clientId,
         AuthFlow: "USER_PASSWORD_AUTH",
-        AuthParameters: {
-          USERNAME: loginData.email,
-          PASSWORD: loginData.password,
-        },
+        AuthParameters: authParameters,
       });
 
       const result = await this.client.send(command);
@@ -226,10 +245,12 @@ export class CognitoService {
     try {
       log(LogLevel.INFO, "Confirming email verification", { email });
 
+      const secretHash = this.generateSecretHash(email);
       const command = new ConfirmSignUpCommand({
         ClientId: this.config.clientId,
         Username: email,
         ConfirmationCode: confirmationCode,
+        ...(secretHash && { SecretHash: secretHash }),
       });
 
       await this.client.send(command);
@@ -255,9 +276,11 @@ export class CognitoService {
     try {
       log(LogLevel.INFO, "Resending verification code", { email });
 
+      const secretHash = this.generateSecretHash(email);
       const command = new ResendConfirmationCodeCommand({
         ClientId: this.config.clientId,
         Username: email,
+        ...(secretHash && { SecretHash: secretHash }),
       });
 
       await this.client.send(command);
@@ -285,9 +308,11 @@ export class CognitoService {
     try {
       log(LogLevel.INFO, "Initiating password reset", { email });
 
+      const secretHash = this.generateSecretHash(email);
       const command = new ForgotPasswordCommand({
         ClientId: this.config.clientId,
         Username: email,
+        ...(secretHash && { SecretHash: secretHash }),
       });
 
       await this.client.send(command);
@@ -319,11 +344,13 @@ export class CognitoService {
     try {
       log(LogLevel.INFO, "Confirming password reset", { email });
 
+      const secretHash = this.generateSecretHash(email);
       const command = new ConfirmForgotPasswordCommand({
         ClientId: this.config.clientId,
         Username: email,
         ConfirmationCode: confirmationCode,
         Password: newPassword,
+        ...(secretHash && { SecretHash: secretHash }),
       });
 
       await this.client.send(command);

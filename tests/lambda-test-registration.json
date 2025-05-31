@@ -1,0 +1,13 @@
+{
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json",
+    "User-Agent": "MediSecure-Test/1.0"
+  },
+  "requestContext": {
+    "identity": {
+      "sourceIp": "127.0.0.1"
+    }
+  },
+  "body": "{\"email\":\"test@medisecure.qa\",\"password\":\"SecurePass123!\",\"firstName\":\"Ahmed\",\"lastName\":\"Al-Rashid\",\"phoneNumber\":\"+974-1234-5678\",\"dateOfBirth\":\"1990-01-15\"}"
+}

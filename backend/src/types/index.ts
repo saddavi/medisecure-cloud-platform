@@ -101,6 +101,7 @@ export interface MediSecureError {
 export interface CognitoConfig {
   userPoolId: string;
   clientId: string;
+  clientSecret?: string;
   region: string;
 }
 

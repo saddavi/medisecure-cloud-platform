@@ -12,14 +12,22 @@ FUNCTION_PREFIX="MediSecure"
 RUNTIME="nodejs18.x"
 TIMEOUT=30
 MEMORY=256
+ROLE_NAME="MediSecure-LambdaExecutionRole"
+
+# Get account ID and build role ARN dynamically
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/${ROLE_NAME}"
 
 # Environment variables for Lambda
 COGNITO_USER_POOL_ID="ap-south-1_4Cr7XFUmS"
 COGNITO_CLIENT_ID="34oik0kokq9l20kiqs3kvth2li"
 
+echo "🔐 Using IAM Role: $ROLE_ARN"
+
 echo "📦 Building and packaging Lambda functions..."
 
-# Build the project
+# Build the project from backend directory
+cd backend
 npm run build
 
 if [ $? -ne 0 ]; then
@@ -32,11 +40,12 @@ echo "✅ Build successful"
 # Create deployment package
 echo "📦 Creating deployment package..."
 cd dist
-zip -r ../lambda-deployment.zip . -q
+zip -r ../../lambda-deployment.zip . -q
 cd ..
 
 # Add node_modules to the package
-zip -r lambda-deployment.zip node_modules -q
+zip -r ../lambda-deployment.zip node_modules -q
+cd ..
 
 echo "✅ Deployment package created: lambda-deployment.zip"
 echo "📋 Package size: $(du -h lambda-deployment.zip | cut -f1)"
@@ -59,12 +68,12 @@ else
     aws lambda create-function \
         --function-name "${FUNCTION_PREFIX}-UserRegistration" \
         --runtime $RUNTIME \
-        --role "arn:aws:iam::044519418263:role/MediSecure-LambdaExecutionRole" \
+        --role "$ROLE_ARN" \
         --handler "auth/register.handler" \
         --zip-file fileb://lambda-deployment.zip \
         --timeout $TIMEOUT \
         --memory-size $MEMORY \
-        --environment Variables="{COGNITO_USER_POOL_ID=$COGNITO_USER_POOL_ID,COGNITO_CLIENT_ID=$COGNITO_CLIENT_ID,AWS_REGION=$REGION}" \
+        --environment Variables="{COGNITO_USER_POOL_ID=$COGNITO_USER_POOL_ID,COGNITO_CLIENT_ID=$COGNITO_CLIENT_ID}" \
         --region $REGION
 fi
 
@@ -93,12 +102,12 @@ else
     aws lambda create-function \
         --function-name "${FUNCTION_PREFIX}-UserLogin" \
         --runtime $RUNTIME \
-        --role "arn:aws:iam::044519418263:role/MediSecure-LambdaExecutionRole" \
+        --role "$ROLE_ARN" \
         --handler "auth/login.handler" \
         --zip-file fileb://lambda-deployment.zip \
         --timeout $TIMEOUT \
         --memory-size $MEMORY \
-        --environment Variables="{COGNITO_USER_POOL_ID=$COGNITO_USER_POOL_ID,COGNITO_CLIENT_ID=$COGNITO_CLIENT_ID,AWS_REGION=$REGION}" \
+        --environment Variables="{COGNITO_USER_POOL_ID=$COGNITO_USER_POOL_ID,COGNITO_CLIENT_ID=$COGNITO_CLIENT_ID}" \
         --region $REGION
 fi
 

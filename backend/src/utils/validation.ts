@@ -30,7 +30,7 @@ const emailSchema = Joi.string()
 // ============= Phone Number Validation =============
 // Qatar phone number format: +974-XXXX-XXXX or similar international formats
 const phoneSchema = Joi.string()
-  .pattern(new RegExp('^(\+[1-9]\d{1,14})$'))
+  .pattern(new RegExp('^(\\+[1-9]\\d{1,14})$'))
   .optional()
   .messages({
     'string.pattern.base': 'Phone number must be in international format (e.g., +97412345678)'
@@ -43,7 +43,7 @@ const registrationSchema = Joi.object<UserRegistrationRequest>({
   firstName: Joi.string()
     .min(2)
     .max(50)
-    .pattern(new RegExp('^[a-zA-Z\s\-\'\.]+$'))
+    .pattern(new RegExp('^[a-zA-Z\\s\\-\'\\.]+$'))
     .required()
     .messages({
       'string.min': 'First name must be at least 2 characters',
@@ -54,7 +54,7 @@ const registrationSchema = Joi.object<UserRegistrationRequest>({
   lastName: Joi.string()
     .min(2)
     .max(50)
-    .pattern(new RegExp('^[a-zA-Z\s\-\'\.]+$'))
+    .pattern(new RegExp('^[a-zA-Z\\s\\-\'\\.]+$'))
     .required()
     .messages({
       'string.min': 'Last name must be at least 2 characters',
