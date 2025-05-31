@@ -18,6 +18,8 @@ aws-credentials.json
 *.p12
 *.key
 config/secrets.json
+docs/MENTOR-INSTRUCTIONS.md
+docs/QUICK-MENTOR-PROMPT.md
 # Note: .env.aws.template is safe to commit (contains no secrets)
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
