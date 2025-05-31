@@ -33,6 +33,29 @@
 - **Cost Management**: https://console.aws.amazon.com/billing/home#/
 
 ---
-**Account**: YOUR_AWS_ACCOUNT
+**Account**: medisecure-admin (044519418263)
 **Region**: Asia Pacific (Mumbai) - ap-south-1
 **Project**: MediSecure Cloud Platform for Qatar
+
+## 🎓 Learning Notes
+*Use these console links during your mentorship journey to see each service in action*
+
+### Phase 1: Authentication Foundation (Week 1)
+- Start with **Cognito** - Understanding user management
+- Move to **Lambda** - Your first serverless functions
+- Connect with **API Gateway** - Creating your first APIs
+
+### Phase 2: Data & Storage (Week 2) 
+- **RDS** - Relational database fundamentals
+- **S3** - Object storage for medical files
+- **DynamoDB** - NoSQL for session data
+
+### Phase 3: Real-time Features (Week 3)
+- **IoT Core** - Device connectivity
+- **SNS** - Notification systems
+- **CloudWatch** - Monitoring and alerts
+
+### Phase 4: Production Ready (Week 4)
+- **CloudFormation/CDK** - Infrastructure as Code
+- **IAM** - Advanced security
+- **VPC** - Network architecture
