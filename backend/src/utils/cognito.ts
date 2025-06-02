@@ -175,7 +175,7 @@ export class CognitoService {
         USERNAME: loginData.email,
         PASSWORD: loginData.password,
       };
-      
+
       if (secretHash) {
         authParameters.SECRET_HASH = secretHash;
       }

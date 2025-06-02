@@ -9,7 +9,7 @@ echo "=========================================="
 # Configuration
 REGION="ap-south-1"
 FUNCTION_PREFIX="MediSecure"
-RUNTIME="nodejs18.x"
+RUNTIME="nodejs20.x"  # Updated from deprecated nodejs18.x (EOL: Sept 1, 2025)
 TIMEOUT=30
 MEMORY=256
 ROLE_NAME="MediSecure-LambdaExecutionRole"
