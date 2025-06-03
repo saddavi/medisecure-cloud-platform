@@ -65,7 +65,7 @@ export const handler = async (
       false,
       "Internal server error",
       undefined,
-      error
+      error instanceof Error ? error.message : String(error)
     );
   }
 };
@@ -220,10 +220,11 @@ async function createPatient(
       cognitoUserId: patientData.cognitoUserId || "",
       personalInfo: patientData.personalInfo,
       medicalInfo: patientData.medicalInfo || {},
-      preferences: patientData.preferences || {
-        language: "en",
-        timezone: "Asia/Qatar",
-        communicationMethod: "email",
+      preferences: {
+        language: patientData.preferences?.language || "en",
+        timezone: patientData.preferences?.timezone || "Asia/Qatar",
+        communicationMethod:
+          patientData.preferences?.communicationMethod || "email",
       },
       createdAt: timestamp,
       updatedAt: timestamp,

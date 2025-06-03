@@ -1,0 +1,8 @@
+{
+  "httpMethod": "POST",
+  "path": "/patients",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"personalInfo\":{\"firstName\":\"Ahmed\",\"lastName\":\"Al-Rashid\",\"email\":\"ahmed.test@medisecure.com\",\"phoneNumber\":\"+973-1234-5678\",\"dateOfBirth\":\"1985-03-15\",\"gender\":\"M\",\"address\":{\"street\":\"123 Manama Street\",\"city\":\"Manama\",\"state\":\"Capital\",\"country\":\"Bahrain\",\"postalCode\":\"12345\"}},\"medicalInfo\":{\"bloodType\":\"O+\",\"allergies\":[\"Penicillin\"],\"emergencyContact\":{\"name\":\"Fatima Al-Rashid\",\"relationship\":\"Wife\",\"phoneNumber\":\"+973-1234-5679\"},\"insuranceProvider\":\"Bahrain Insurance\",\"insuranceNumber\":\"BHR123456789\"},\"cognitoUserId\":\"test-user-123\"}"
+}

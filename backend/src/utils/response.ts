@@ -236,3 +236,44 @@ export function validateEnvironment(requiredVars: string[]): void {
     );
   }
 }
+
+/**
+ * Validates API Gateway request structure
+ * @param event - API Gateway event
+ * @param requiredFields - Array of required fields in the request body
+ * @returns Parsed request body or throws validation error
+ */
+export function validateRequest<T = any>(
+  event: { body?: string | null; httpMethod?: string; pathParameters?: any },
+  requiredFields: string[] = []
+): T {
+  // Validate HTTP method
+  if (!event.httpMethod) {
+    throw new Error("HTTP method is required");
+  }
+
+  // For GET requests, return path parameters
+  if (event.httpMethod === "GET") {
+    return (event.pathParameters || {}) as T;
+  }
+
+  // For POST/PUT requests, validate body
+  if (!event.body) {
+    throw new Error("Request body is required");
+  }
+
+  let requestData: any;
+  try {
+    requestData = JSON.parse(event.body);
+  } catch (error) {
+    throw new Error("Invalid JSON in request body");
+  }
+
+  // Validate required fields
+  const missingFields = requiredFields.filter((field) => !requestData[field]);
+  if (missingFields.length > 0) {
+    throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
+  }
+
+  return requestData as T;
+}

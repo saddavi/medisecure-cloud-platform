@@ -70,7 +70,7 @@ export const handler = async (
       false,
       "Internal server error",
       undefined,
-      error
+      error instanceof Error ? error.message : String(error)
     );
   }
 };

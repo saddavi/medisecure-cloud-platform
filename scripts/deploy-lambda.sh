@@ -7,7 +7,7 @@ echo "🏥 MediSecure - Lambda Function Deployment"
 echo "=========================================="
 
 # Configuration
-REGION="ap-south-1"
+REGION="me-south-1"  # Bahrain - closest to user's location
 FUNCTION_PREFIX="MediSecure"
 RUNTIME="nodejs20.x"  # Updated from deprecated nodejs18.x (EOL: Sept 1, 2025)
 TIMEOUT=30
@@ -19,8 +19,9 @@ ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/${ROLE_NAME}"
 
 # Environment variables for Lambda
-COGNITO_USER_POOL_ID="ap-south-1_4Cr7XFUmS"
+COGNITO_USER_POOL_ID="ap-south-1_4Cr7XFUmS"  # Note: Different region from DynamoDB for existing users
 COGNITO_CLIENT_ID="34oik0kokq9l20kiqs3kvth2li"
+DYNAMODB_TABLE_NAME="MediSecure-HealthData"
 
 echo "🔐 Using IAM Role: $ROLE_ARN"
 
@@ -118,6 +119,74 @@ else
     exit 1
 fi
 
+# Deploy Patient Management Function
+echo ""
+echo "🚀 Deploying Patient Management Lambda Function..."
+
+# Check if function exists
+aws lambda get-function --function-name "${FUNCTION_PREFIX}-PatientManagement" --region $REGION &>/dev/null
+
+if [ $? -eq 0 ]; then
+    echo "📝 Function exists, updating code..."
+    aws lambda update-function-code \
+        --function-name "${FUNCTION_PREFIX}-PatientManagement" \
+        --zip-file fileb://lambda-deployment.zip \
+        --region $REGION
+else
+    echo "🆕 Creating new function..."
+    aws lambda create-function \
+        --function-name "${FUNCTION_PREFIX}-PatientManagement" \
+        --runtime $RUNTIME \
+        --role "$ROLE_ARN" \
+        --handler "patient/patient-management.handler" \
+        --zip-file fileb://lambda-deployment.zip \
+        --timeout $TIMEOUT \
+        --memory-size $MEMORY \
+        --environment Variables="{DYNAMODB_TABLE_NAME=$DYNAMODB_TABLE_NAME}" \
+        --region $REGION
+fi
+
+if [ $? -eq 0 ]; then
+    echo "✅ Patient Management function deployed successfully"
+else
+    echo "❌ Patient Management function deployment failed"
+    exit 1
+fi
+
+# Deploy Medical Records Function
+echo ""
+echo "🚀 Deploying Medical Records Lambda Function..."
+
+# Check if function exists
+aws lambda get-function --function-name "${FUNCTION_PREFIX}-MedicalRecords" --region $REGION &>/dev/null
+
+if [ $? -eq 0 ]; then
+    echo "📝 Function exists, updating code..."
+    aws lambda update-function-code \
+        --function-name "${FUNCTION_PREFIX}-MedicalRecords" \
+        --zip-file fileb://lambda-deployment.zip \
+        --region $REGION
+else
+    echo "🆕 Creating new function..."
+    aws lambda create-function \
+        --function-name "${FUNCTION_PREFIX}-MedicalRecords" \
+        --runtime $RUNTIME \
+        --role "$ROLE_ARN" \
+        --handler "medical/medical-records.handler" \
+        --zip-file fileb://lambda-deployment.zip \
+        --timeout $TIMEOUT \
+        --memory-size $MEMORY \
+        --environment Variables="{DYNAMODB_TABLE_NAME=$DYNAMODB_TABLE_NAME}" \
+        --region $REGION
+fi
+
+if [ $? -eq 0 ]; then
+    echo "✅ Medical Records function deployed successfully"
+else
+    echo "❌ Medical Records function deployment failed"
+    exit 1
+fi
+
 # Clean up
 rm lambda-deployment.zip
 
@@ -127,13 +196,15 @@ echo ""
 echo "📊 Function Details:"
 echo "• Registration: ${FUNCTION_PREFIX}-UserRegistration"
 echo "• Login: ${FUNCTION_PREFIX}-UserLogin"
+echo "• Patient Management: ${FUNCTION_PREFIX}-PatientManagement"
+echo "• Medical Records: ${FUNCTION_PREFIX}-MedicalRecords"
 echo "• Runtime: $RUNTIME"
 echo "• Memory: ${MEMORY}MB"
 echo "• Timeout: ${TIMEOUT}s"
 echo "• Region: $REGION"
 echo ""
 echo "🔗 Quick Access:"
-echo "Lambda Console: https://ap-south-1.console.aws.amazon.com/lambda/home?region=ap-south-1#/functions"
+echo "Lambda Console: https://me-south-1.console.aws.amazon.com/lambda/home?region=me-south-1#/functions"
 echo ""
 echo "💡 Next Steps:"
 echo "1. Test functions in Lambda console"

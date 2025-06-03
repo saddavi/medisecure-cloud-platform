@@ -25,7 +25,7 @@ export class MediSecureStack extends cdk.Stack {
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
 
       // Performance: On-demand billing for unpredictable healthcare workloads
-      billingMode: dynamodb.BillingMode.ON_DEMAND,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
 
       // Data Protection: Point-in-time recovery for critical medical data
       pointInTimeRecovery: true,
@@ -102,11 +102,12 @@ export class MediSecureStack extends cdk.Stack {
       {
         runtime: lambda.Runtime.NODEJS_20_X, // Updated from deprecated Node.js 18
         handler: "patient-management.handler",
-        code: lambda.Code.fromAsset("../backend/dist"),
+        code: lambda.Code.fromAsset("../../backend/dist"),
         role: lambdaRole,
         environment: {
           DYNAMODB_TABLE_NAME: healthDataTable.tableName,
           AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1", // Performance optimization
+          AWS_REGION: "me-south-1", // Bahrain region
         },
         timeout: cdk.Duration.seconds(30),
         memorySize: 256,
@@ -120,11 +121,12 @@ export class MediSecureStack extends cdk.Stack {
       {
         runtime: lambda.Runtime.NODEJS_20_X, // Updated from deprecated Node.js 18
         handler: "medical-records.handler",
-        code: lambda.Code.fromAsset("../backend/dist"),
+        code: lambda.Code.fromAsset("../../backend/dist"),
         role: lambdaRole,
         environment: {
           DYNAMODB_TABLE_NAME: healthDataTable.tableName,
           AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+          AWS_REGION: "me-south-1", // Bahrain region
         },
         timeout: cdk.Duration.seconds(30),
         memorySize: 256,
