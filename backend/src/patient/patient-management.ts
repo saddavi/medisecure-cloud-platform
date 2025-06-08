@@ -212,8 +212,8 @@ async function createPatient(
     const patientRecord: PatientProfile = {
       PK: `USER#${patientId}`,
       SK: "PROFILE#main",
-      GSI1PK: `EMAIL#${patientData.personalInfo.email}`,
-      GSI1SK: `USER#${patientId}`,
+      GSI1PK: "USER#PATIENT", // For listing all patients
+      GSI1SK: `${timestamp}#${patientId}`, // Sort by creation time + ID
       entityType: "USER",
       userType: "PATIENT",
       patientId,

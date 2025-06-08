@@ -51,8 +51,8 @@ export interface PatientProfile {
   // DynamoDB Keys
   PK: string; // USER#{patientId}
   SK: string; // PROFILE#main
-  GSI1PK: string; // EMAIL#{email}
-  GSI1SK: string; // USER#{patientId}
+  GSI1PK: string; // USER#PATIENT (for listing all patients)
+  GSI1SK: string; // {timestamp}#{patientId} (for sorting by creation time)
 
   // Entity metadata
   entityType: "USER";
