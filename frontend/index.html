@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/medical-icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="MediSecure Cloud Platform - Secure Healthcare Management System"
+    />
+    <meta
+      name="keywords"
+      content="healthcare, medical records, HIPAA compliant, patient management"
+    />
+    <title>MediSecure Cloud Platform</title>
+
+    <!-- Security Headers -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.medisecure-cloud.com https://*.amazonaws.com;"
+    />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+
+    <!-- HIPAA Compliance Notice -->
+    <meta name="robots" content="noindex, nofollow" />
+
+    <!-- Preload critical resources -->
+    <link
+      rel="preload"
+      href="/fonts/inter-var.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <!-- Healthcare Theme Colors -->
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="msapplication-TileColor" content="#2563eb" />
+
+    <!-- Performance optimization -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- Loading fallback for no-JS users -->
+    <noscript>
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+          font-family: system-ui, -apple-system, sans-serif;
+          text-align: center;
+          padding: 2rem;
+          background-color: #f9fafb;
+        "
+      >
+        <div
+          style="
+            width: 64px;
+            height: 64px;
+            background-color: #2563eb;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+          "
+        >
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            stroke-width="2"
+          >
+            <path
+              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+            ></path>
+          </svg>
+        </div>
+        <h1
+          style="
+            color: #111827;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+          "
+        >
+          MediSecure Cloud Platform
+        </h1>
+        <p style="color: #6b7280; margin-bottom: 2rem; max-width: 500px">
+          JavaScript is required to access this secure healthcare platform.
+          Please enable JavaScript in your browser and refresh the page.
+        </p>
+        <div
+          style="
+            background-color: #dbeafe;
+            border: 1px solid #bfdbfe;
+            padding: 1rem;
+            border-radius: 8px;
+            color: #1e40af;
+            font-size: 0.875rem;
+          "
+        >
+          <strong>HIPAA Notice:</strong> This platform contains protected health
+          information. Unauthorized access is prohibited.
+        </div>
+      </div>
+    </noscript>
+
+    <!-- Main application script -->
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Service Worker for offline functionality -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log("SW registered: ", registration);
+            })
+            .catch((registrationError) => {
+              console.log("SW registration failed: ", registrationError);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>

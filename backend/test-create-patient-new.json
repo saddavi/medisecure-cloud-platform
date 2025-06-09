@@ -1,0 +1,26 @@
+{
+  "personalInfo": {
+    "firstName": "Sarah",
+    "lastName": "Al-Mahmoud",
+    "email": "sarah.mahmoud@example.com",
+    "phoneNumber": "+97455567890",
+    "dateOfBirth": "1985-03-22",
+    "gender": "female",
+    "nationality": "Qatari"
+  },
+  "medicalInfo": {
+    "bloodType": "A+",
+    "allergies": ["Aspirin"],
+    "chronicConditions": [],
+    "emergencyContact": {
+      "name": "Omar Al-Mahmoud",
+      "relationship": "Husband",
+      "phoneNumber": "+97455567891"
+    }
+  },
+  "preferences": {
+    "language": "en",
+    "timezone": "Asia/Qatar",
+    "communicationMethod": "email"
+  }
+}

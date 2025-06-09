@@ -83,7 +83,7 @@
 ### Prerequisites to Review:
 
 - React basics and hooks
-- AWS API integration patterns  
+- AWS API integration patterns
 - Healthcare data compliance (HIPAA)
 - UI/UX design principles for healthcare
 
