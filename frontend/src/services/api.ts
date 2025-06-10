@@ -3,11 +3,11 @@
 
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from "axios";
 import { awsConfig } from "@/config/aws";
-import { AuthTokens, ApiResponse } from "@/types";
+import { ApiResponse } from "@/types";
+import { amplifyAuthService } from "@/services/amplifyAuth";
 
 class ApiService {
   private client: AxiosInstance;
-  private authTokens: AuthTokens | null = null;
 
   constructor() {
     this.client = axios.create({
@@ -25,9 +25,12 @@ class ApiService {
   private setupInterceptors() {
     // Request interceptor to add auth headers
     this.client.interceptors.request.use(
-      (config) => {
-        if (this.authTokens?.accessToken) {
-          config.headers.Authorization = `Bearer ${this.authTokens.accessToken}`;
+      async (config) => {
+        // Get current tokens from Amplify
+        const tokens = await amplifyAuthService.getTokens();
+
+        if (tokens?.accessToken) {
+          config.headers.Authorization = `Bearer ${tokens.accessToken}`;
         }
 
         // Add request ID for tracing
@@ -85,73 +88,34 @@ class ApiService {
   }
 
   private handleAuthError() {
-    // Clear stored tokens
-    this.authTokens = null;
-    localStorage.removeItem("medisecure_tokens");
-
-    // Redirect to login
+    // Redirect to login - Amplify will handle token cleanup
     window.location.href = "/login";
   }
 
-  // ============= Authentication Methods =============
+  // ============= Health & System API =============
 
-  setAuthTokens(tokens: AuthTokens) {
-    this.authTokens = tokens;
-    localStorage.setItem("medisecure_tokens", JSON.stringify(tokens));
-  }
-
-  clearAuthTokens() {
-    this.authTokens = null;
-    localStorage.removeItem("medisecure_tokens");
-  }
-
-  loadStoredTokens() {
+  async healthCheck(): Promise<boolean> {
     try {
-      const stored = localStorage.getItem("medisecure_tokens");
-      if (stored) {
-        this.authTokens = JSON.parse(stored);
+      // Since our API requires authentication, we'll check if we can reach the service
+      // by making a request and checking if we get back a proper error response
+      const response = await this.client.get("/health");
+      return response.status === 200;
+    } catch (error: any) {
+      // If we get a 401 or 403, the API is working but requires auth (expected)
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        return true;
       }
-    } catch (error) {
-      console.error("Failed to load stored tokens:", error);
-      this.clearAuthTokens();
+      // If we get "Missing Authentication Token", the API Gateway is working
+      if (error.response?.data?.message === "Missing Authentication Token") {
+        return true;
+      }
+      console.warn(
+        "Health check failed:",
+        error.response?.status,
+        error.message
+      );
+      return false;
     }
-  }
-
-  // ============= Authentication API =============
-
-  async register(userData: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    phoneNumber?: string;
-    dateOfBirth?: string;
-  }): Promise<ApiResponse> {
-    const response = await this.client.post(
-      awsConfig.apiGateway.endpoints.auth.register,
-      userData
-    );
-    return response.data;
-  }
-
-  async login(credentials: {
-    email: string;
-    password: string;
-  }): Promise<ApiResponse<AuthTokens>> {
-    const response = await this.client.post(
-      awsConfig.apiGateway.endpoints.auth.login,
-      credentials
-    );
-
-    if (response.data.success && response.data.data) {
-      this.setAuthTokens(response.data.data);
-    }
-
-    return response.data;
-  }
-
-  async logout(): Promise<void> {
-    this.clearAuthTokens();
   }
 
   // ============= Patient Management API =============
@@ -271,24 +235,9 @@ class ApiService {
     const response = await this.client.delete(url, config);
     return response;
   }
-
-  // ============= Health Check =============
-
-  async healthCheck(): Promise<boolean> {
-    try {
-      // Simple health check - you can enhance this
-      await this.client.get("/health");
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
 }
 
 // Create singleton instance
 export const apiService = new ApiService();
-
-// Load tokens on initialization
-apiService.loadStoredTokens();
 
 export default apiService;

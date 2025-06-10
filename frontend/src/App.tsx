@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -21,6 +21,8 @@ import CreatePatient from "./pages/CreatePatient";
 import EditPatient from "./pages/EditPatient";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/common/ErrorBoundary";
+import { runIntegrationTests } from "./utils/testIntegration";
+import DevTestPanel from "./components/dev/DevTestPanel";
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -39,6 +41,24 @@ const queryClient = new QueryClient({
 });
 
 const App: React.FC = () => {
+  // Run integration tests on app startup (development only)
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log("🔬 Running integration tests...");
+      runIntegrationTests()
+        .then((results) => {
+          console.log("✅ Integration test results:", results);
+          const failures = results.filter((r) => r.status === "error");
+          if (failures.length > 0) {
+            console.warn("⚠️ Some integration tests failed:", failures);
+          }
+        })
+        .catch((error) => {
+          console.error("❌ Integration tests failed:", error);
+        });
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -106,6 +126,9 @@ const App: React.FC = () => {
                   },
                 }}
               />
+
+              {/* Development Test Panel (only in development) */}
+              {import.meta.env.DEV && <DevTestPanel />}
             </div>
           </Router>
         </AuthProvider>
@@ -114,6 +137,9 @@ const App: React.FC = () => {
         {process.env.NODE_ENV === "development" && (
           <ReactQueryDevtools initialIsOpen={false} />
         )}
+
+        {/* Development Test Panel */}
+        <DevTestPanel />
       </QueryClientProvider>
     </ErrorBoundary>
   );

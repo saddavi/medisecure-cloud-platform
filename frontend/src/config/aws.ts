@@ -1,13 +1,21 @@
 // MediSecure Cloud Platform - AWS Configuration
 // Healthcare-grade AWS Amplify and Cognito configuration
 
+// Environment variables with fallbacks for Vite
+const getEnvVar = (key: keyof ImportMetaEnv, fallback: string): string => {
+  return import.meta.env[key] || fallback;
+};
+
 export const awsConfig = {
   // AWS Region Configuration
-  region: "ap-south-1", // Mumbai region (closest to Qatar)
+  region: getEnvVar("VITE_AWS_REGION", "ap-south-1"), // Mumbai region (closest to Qatar)
 
   // API Gateway Configuration
   apiGateway: {
-    baseUrl: "https://e8x7hxtrul.execute-api.ap-south-1.amazonaws.com",
+    baseUrl: getEnvVar(
+      "VITE_API_GATEWAY_BASE_URL",
+      "https://e8x7hxtrul.execute-api.ap-south-1.amazonaws.com/dev"
+    ),
     endpoints: {
       auth: {
         register: "/auth/register",
@@ -22,9 +30,12 @@ export const awsConfig = {
 
   // AWS Cognito Configuration
   cognito: {
-    userPoolId: "ap-south-1_4Cr7XFUmS",
-    userPoolWebClientId: "34oik0kokq9l20kiqs3kvth2li",
-    region: "ap-south-1",
+    userPoolId: getEnvVar("VITE_AWS_USER_POOL_ID", "ap-south-1_4Cr7XFUmS"),
+    userPoolWebClientId: getEnvVar(
+      "VITE_AWS_USER_POOL_WEB_CLIENT_ID",
+      "34oik0kokq9l20kiqs3kvth2li"
+    ),
+    region: getEnvVar("VITE_AWS_REGION", "ap-south-1"),
 
     // Authentication configuration
     authenticationFlowType: "USER_PASSWORD_AUTH",
@@ -33,20 +44,22 @@ export const awsConfig = {
     tokenRefreshThreshold: 300000, // 5 minutes in milliseconds
 
     // Session configuration
-    sessionTimeout: 3600000, // 1 hour in milliseconds
+    sessionTimeout:
+      parseInt(getEnvVar("VITE_SESSION_TIMEOUT_MINUTES", "30")) * 60 * 1000, // Convert minutes to milliseconds
   },
 
   // Application Configuration
   app: {
-    name: "MediSecure Cloud Platform",
-    version: "1.0.0",
-    environment: process.env.NODE_ENV || "development",
+    name: getEnvVar("VITE_APP_NAME", "MediSecure Cloud Platform"),
+    version: getEnvVar("VITE_APP_VERSION", "1.0.0"),
+    environment: getEnvVar("VITE_APP_ENVIRONMENT", "development"),
 
     // Healthcare-specific settings
     compliance: {
-      sessionTimeout: 30 * 60 * 1000, // 30 minutes for healthcare compliance
-      autoLogout: true,
-      auditLogging: true,
+      sessionTimeout:
+        parseInt(getEnvVar("VITE_SESSION_TIMEOUT_MINUTES", "30")) * 60 * 1000, // 30 minutes for healthcare compliance
+      autoLogout: getEnvVar("VITE_AUTO_LOGOUT_ENABLED", "true") === "true",
+      auditLogging: getEnvVar("VITE_AUDIT_LOGGING_ENABLED", "true") === "true",
     },
 
     // UI/UX Configuration
@@ -55,43 +68,37 @@ export const awsConfig = {
       locale: "en-US",
       timezone: "Asia/Qatar",
     },
+
+    // Debug configuration
+    debug: {
+      enabled: getEnvVar("VITE_DEBUG_MODE", "false") === "true",
+      logLevel: getEnvVar("VITE_LOG_LEVEL", "error") as
+        | "debug"
+        | "info"
+        | "warn"
+        | "error",
+    },
   },
 };
 
-// AWS Amplify Configuration
+// AWS Amplify Configuration (v6 format)
 export const amplifyConfig = {
   Auth: {
-    region: awsConfig.cognito.region,
-    userPoolId: awsConfig.cognito.userPoolId,
-    userPoolWebClientId: awsConfig.cognito.userPoolWebClientId,
-    authenticationFlowType: awsConfig.cognito.authenticationFlowType,
-
-    // OAuth configuration (for future social login)
-    oauth: {
-      domain: "", // Will be configured when OAuth is needed
-      scope: ["email", "profile", "openid"],
-      redirectSignIn: window.location.origin,
-      redirectSignOut: window.location.origin,
-      responseType: "code",
-    },
-  },
-
-  // API Configuration
-  API: {
-    endpoints: [
-      {
-        name: "MediSecureAPI",
-        endpoint: awsConfig.apiGateway.baseUrl,
-        region: awsConfig.region,
+    Cognito: {
+      region: awsConfig.cognito.region,
+      userPoolId: awsConfig.cognito.userPoolId,
+      userPoolClientId: awsConfig.cognito.userPoolWebClientId,
+      loginWith: {
+        email: true,
       },
-    ],
+    },
   },
 };
 
 // Environment-specific overrides
 if (awsConfig.app.environment === "production") {
-  // Production-specific configurations
-  amplifyConfig.Auth.oauth.domain = "auth.medisecure.com"; // Example production domain
+  // Production-specific configurations can be added here
+  console.log("Running in production mode");
 }
 
 export default awsConfig;

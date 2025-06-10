@@ -8,7 +8,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { apiService } from "@/services/api";
+import { amplifyAuthService } from "@/services/amplifyAuth";
 import {
   AuthState,
   AuthUser,
@@ -115,32 +115,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       dispatch({ type: "AUTH_START" });
 
-      console.log("🔐 Starting login process...");
+      console.log("🔐 Starting login process with AWS Cognito...");
 
-      // Use API service for login
-      const response = await apiService.login(credentials);
+      // Use Amplify authentication service
+      const response = await amplifyAuthService.login(credentials);
 
-      if (response.success && response.data) {
-        const tokens = response.data;
-
-        // Create user object from token data (you might want to decode JWT)
-        const user: AuthUser = {
-          userId: "temp_user_id", // Extract from JWT in production
-          email: credentials.email,
-          firstName: undefined,
-          lastName: undefined,
-          userType: "PATIENT",
-          isEmailVerified: true,
-          createdAt: new Date().toISOString(),
-        };
-
+      if (response.success && response.user && response.tokens) {
         dispatch({
           type: "AUTH_SUCCESS",
-          payload: { user, tokens },
+          payload: { user: response.user, tokens: response.tokens },
         });
-
         toast.success("Login successful! Welcome to MediSecure.");
-        console.log("✅ Login successful");
+        console.log("✅ Login successful with Cognito");
       } else {
         throw new Error(response.message || "Login failed");
       }
@@ -160,24 +146,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       dispatch({ type: "AUTH_START" });
 
-      console.log("📝 Starting registration process...");
+      console.log("📝 Starting registration process with AWS Cognito...");
 
-      // Use API service for registration
-      const response = await apiService.register({
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phoneNumber: data.phoneNumber,
-        dateOfBirth: data.dateOfBirth,
-      });
+      // Use Amplify authentication service
+      const response = await amplifyAuthService.register(data);
 
       if (response.success) {
         dispatch({ type: "SET_LOADING", payload: false });
         toast.success(
-          "Registration successful! Please check your email for verification."
+          response.message ||
+            "Registration successful! Please check your email for verification."
         );
-        console.log("✅ Registration successful");
+        console.log("✅ Registration successful with Cognito");
       } else {
         throw new Error(response.message || "Registration failed");
       }
@@ -195,14 +175,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async (): Promise<void> => {
     try {
-      console.log("🚪 Logging out...");
+      console.log("🚪 Logging out with AWS Cognito...");
 
-      // Clear API service tokens
-      await apiService.logout();
+      // Use Amplify authentication service
+      await amplifyAuthService.logout();
 
       dispatch({ type: "LOGOUT" });
       toast.success("Logged out successfully");
-      console.log("✅ Logout successful");
+      console.log("✅ Logout successful with Cognito");
     } catch (error: any) {
       console.error("❌ Logout error:", error);
       // Still dispatch logout even if there's an error
@@ -218,38 +198,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       dispatch({ type: "SET_LOADING", payload: true });
 
-      // Check if user is still authenticated
-      const storedTokens = localStorage.getItem("medisecure_tokens");
+      console.log("🔄 Checking authentication status with AWS Cognito...");
 
-      if (storedTokens) {
-        try {
-          const tokens: AuthTokens = JSON.parse(storedTokens);
+      // Check if user is authenticated with Amplify
+      const isAuthenticated = await amplifyAuthService.isAuthenticated();
 
-          // Check if tokens are still valid (basic check)
-          if (tokens.expiresIn > Date.now() / 1000) {
-            // Create user object (in production, decode JWT)
-            const user: AuthUser = {
-              userId: "temp_user_id",
-              email: "user@example.com", // Extract from JWT
-              firstName: undefined,
-              lastName: undefined,
-              userType: "PATIENT",
-              isEmailVerified: true,
-              createdAt: new Date().toISOString(),
-            };
+      if (isAuthenticated) {
+        const user = await amplifyAuthService.getCurrentUser();
+        const tokens = await amplifyAuthService.getTokens();
 
-            dispatch({
-              type: "AUTH_SUCCESS",
-              payload: { user, tokens },
-            });
-            return;
-          }
-        } catch (parseError) {
-          console.error("Failed to parse stored tokens:", parseError);
+        if (user && tokens) {
+          dispatch({
+            type: "AUTH_SUCCESS",
+            payload: { user, tokens },
+          });
+          console.log("✅ User is authenticated with Cognito");
+          return;
         }
       }
 
-      // No valid tokens found
+      // No valid authentication found
+      console.log("ℹ️ No valid authentication found");
       dispatch({ type: "LOGOUT" });
     } catch (error: any) {
       console.error("❌ Auth refresh failed:", error);
