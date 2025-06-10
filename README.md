@@ -2,14 +2,15 @@
 
 > A secure, HIPAA-ready healthcare platform built on AWS with full-stack integration
 
-[![Status](https://img.shields.io/badge/Status-95%25%20Complete-brightgreen)]()
+[![Status](https://img.shields.io/badge/Status-100%25%20Complete-brightgreen)]()
 [![Cost](https://img.shields.io/badge/Cost-$0.00-success)]()
-[![AWS](https://img.shields.io/badge/AWS-Free%20Tier-orange)]()
+[![AWS](https://img.shields.io/badge/AWS-Production%20Live-orange)]()
 [![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue)]()
 [![AWS](https://img.shields.io/badge/AWS-Multi--Region-ff9900)]()
 
 ## 🚀 Live Demo
 
+**Production Website**: [https://d1aaifqtlfz7l5.cloudfront.net](https://d1aaifqtlfz7l5.cloudfront.net)  
 **Development Server**: [http://localhost:3000](http://localhost:3000)  
 **Test Credentials**: `test@medisecure.dev` / `TempPass123!`
 
@@ -27,12 +28,12 @@ MediSecure Cloud addresses healthcare coordination challenges in Qatar and the M
 ```
 ┌─────────────────────────────────────────────────────┐
 │              MediSecure Cloud Platform              │
-│                (Multi-Region AWS)                   │
+│           (Production AWS Multi-Region)             │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
 │  Frontend (React + TypeScript)                     │
-│  ├── AWS Amplify Authentication                     │
-│  ├── Modern Healthcare UI/UX                       │
+│  ├── Production: CloudFront CDN                     │
+│  ├── S3 Static Hosting (encrypted)                  │
 │  └── Development: localhost:3000                    │
 │                                                     │
 │  ┌─────────────┐    ap-south-1 (Mumbai)            │
@@ -49,27 +50,28 @@ MediSecure Cloud addresses healthcare coordination challenges in Qatar and the M
 │         │                                           │
 │         ▼                                           │
 │  ┌─────────────┬─────────────┬─────────────┐       │
-│  │  DynamoDB   │   Cognito   │ CloudWatch  │       │
-│  │ (Bahrain)   │  (Mumbai)   │ Monitoring  │       │
-│  │ • Patients  │ • JWT Auth  │ • API Logs  │       │
-│  │ • GSI Fixed │ • MFA Ready │ • Metrics   │       │
+│  │  DynamoDB   │   Cognito   │ CloudFront  │       │
+│  │ (Bahrain)   │  (Mumbai)   │  (Global)   │       │
+│  │ • Patients  │ • JWT Auth  │ • CDN Edge  │       │
+│  │ • GSI Fixed │ • MFA Ready │ • SSL Certs │       │
 │  └─────────────┴─────────────┴─────────────┘       │
 └─────────────────────────────────────────────────────┘
 ```
 
 ## 🎯 Current Status
 
-### ✅ Phase 4 Complete - Full Integration
+### ✅ Phase 5 Complete - Production Deployment
 
 | Component | Status | Function | Region |
 |-----------|--------|----------|--------|
-| **React Frontend** | ✅ Complete | Healthcare UI/UX | Local/Ready |
+| **React Frontend** | ✅ LIVE | Production CloudFront CDN | Global |
+| **S3 Hosting** | ✅ Active | Static website (encrypted) | us-east-1 |
 | **AWS Amplify** | ✅ Integrated | Authentication service | Configured |
 | **AWS Cognito** | ✅ Active | JWT token management | ap-south-1 |
 | **API Gateway** | ✅ Active | Secured REST endpoints | ap-south-1 |
 | **Lambda Functions** | ✅ Deployed | Patient & auth handlers | me-south-1 |
 | **DynamoDB** | ✅ Active | Patient data with GSI | me-south-1 |
-| **CloudWatch** | ✅ Monitoring | Logging & metrics | Multi-region |
+| **CloudFront** | ✅ Active | Global CDN + security | Global |
 
 ### 🔧 Deployed Lambda Functions
 
@@ -79,6 +81,13 @@ MediSecure Cloud addresses healthcare coordination challenges in Qatar and the M
 
 ## 🚀 Try it Now (2 minutes)
 
+### Option 1: Live Production Site ⚡
+```bash
+# ✅ Visit: https://d1aaifqtlfz7l5.cloudfront.net
+# ✅ Login: test@medisecure.dev / TempPass123!
+```
+
+### Option 2: Local Development
 ```bash
 git clone https://github.com/saddavi/medisecure-cloud-platform.git
 cd medisecure-cloud-platform/frontend
@@ -87,14 +96,12 @@ npm install && npm run dev
 # ✅ Login: test@medisecure.dev / TempPass123!
 ```
 
-### Alternative: Full AWS Deployment
-
+### Option 3: Deploy Your Own
 ```bash
-# Deploy infrastructure
+# Deploy production infrastructure
 cd infrastructure/cdk
-npm install
-npm run build
-cdk deploy --context environment=dev
+npm install && npm run build
+cdk deploy MediSecure-Hosting --require-approval never
 ```
 
 ## 📁 Project Structure
@@ -157,6 +164,8 @@ medisecure-cloud-platform/
 
 **Infrastructure**
 - AWS CDK (TypeScript)
+- CloudFront CDN (global)
+- S3 static hosting
 - Multi-region deployment
 - CloudWatch monitoring
 - 100% AWS Free Tier usage
@@ -169,10 +178,11 @@ medisecure-cloud-platform/
 - **Phase 2** - DynamoDB patient management with multi-region setup
 - **Phase 3** - React frontend with modern healthcare UI/UX
 - **Phase 4** - Full-stack integration with authentication flow
+- **Phase 5** - Production deployment with CloudFront CDN
 
 ### Next Phase 🚧
 
-- **Phase 5** - Advanced features (IoT integration, mobile app, analytics)
+- **Phase 6** - Advanced features (IoT integration, mobile app, analytics)
 
 ## 💰 Cost Optimization Results
 
@@ -184,7 +194,8 @@ medisecure-cloud-platform/
 | API Gateway | 1M calls/month | ~100 calls | $0.00 |
 | DynamoDB | 25GB + 200M requests | ~1MB + 50 requests | $0.00 |
 | Cognito | 50K active users | ~5 test users | $0.00 |
-| CloudWatch | Basic monitoring | Standard logs | $0.00 |
+| CloudFront | 1TB data transfer | ~1GB usage | $0.00 |
+| S3 | 5GB storage | ~100MB usage | $0.00 |
 
 **Production Estimate**: $50-200/month for 1000+ patients
 
