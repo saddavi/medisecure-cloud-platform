@@ -45,7 +45,6 @@ const DevTestPanel: React.FC = () => {
         password: testPassword,
         firstName: "Test",
         lastName: "User",
-        userType: "PATIENT",
       });
 
       updateTest(
