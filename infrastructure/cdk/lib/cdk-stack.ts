@@ -107,7 +107,7 @@ export class MediSecureStack extends cdk.Stack {
         environment: {
           DYNAMODB_TABLE_NAME: healthDataTable.tableName,
           AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1", // Performance optimization
-          AWS_REGION: "me-south-1", // Bahrain region
+          DEPLOYMENT_REGION: "me-south-1", // Custom variable for our region reference
         },
         timeout: cdk.Duration.seconds(30),
         memorySize: 256,
@@ -126,7 +126,7 @@ export class MediSecureStack extends cdk.Stack {
         environment: {
           DYNAMODB_TABLE_NAME: healthDataTable.tableName,
           AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
-          AWS_REGION: "me-south-1", // Bahrain region
+          DEPLOYMENT_REGION: "me-south-1", // Custom variable for our region reference
         },
         timeout: cdk.Duration.seconds(30),
         memorySize: 256,
