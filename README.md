@@ -15,6 +15,8 @@
 **Development Server**: [http://localhost:3000](http://localhost:3000)  
 **Test Credentials**: `test@medisecure.dev` / `TempPass123!`
 
+📋 **[Complete Testing Guide](TESTING-GUIDE.md)** - What visitors can test and explore
+
 ## 📋 Overview
 
 MediSecure Cloud addresses healthcare coordination challenges in Qatar and the Middle East, providing a comprehensive platform for:
