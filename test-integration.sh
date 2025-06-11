@@ -36,7 +36,7 @@ fi
 echo "🎫 Testing Cognito authentication flow..."
 AUTH_RESPONSE=$(aws cognito-idp admin-initiate-auth \
     --user-pool-id ap-south-1_4Cr7XFUmS \
-    --client-id 34oik0kokq9l20kiqs3kvth2li \
+    --client-id 9poj7iavug62uuif7sve7a6fo \
     --auth-flow ADMIN_NO_SRP_AUTH \
     --auth-parameters USERNAME=test@medisecure.dev,PASSWORD=TempPass123! \
     --region ap-south-1 2>/dev/null || echo "AUTH_FAILED")

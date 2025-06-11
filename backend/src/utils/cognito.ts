@@ -40,7 +40,7 @@ export class CognitoService {
     // Load configuration from environment variables
     this.config = {
       userPoolId: getEnvVar("COGNITO_USER_POOL_ID", "ap-south-1_4Cr7XFUmS"),
-      clientId: getEnvVar("COGNITO_CLIENT_ID", "34oik0kokq9l20kiqs3kvth2li"),
+      clientId: getEnvVar("COGNITO_CLIENT_ID", "9poj7iavug62uuif7sve7a6fo"),
       clientSecret: getEnvVar("COGNITO_CLIENT_SECRET"),
       region: getEnvVar("AWS_REGION", "ap-south-1"),
     };

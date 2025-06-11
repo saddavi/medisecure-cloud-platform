@@ -33,12 +33,12 @@ export const awsConfig = {
     userPoolId: getEnvVar("VITE_AWS_USER_POOL_ID", "ap-south-1_4Cr7XFUmS"),
     userPoolWebClientId: getEnvVar(
       "VITE_AWS_USER_POOL_WEB_CLIENT_ID",
-      "34oik0kokq9l20kiqs3kvth2li"
+      "9poj7iavug62uuif7sve7a6fo"
     ),
     region: getEnvVar("VITE_AWS_REGION", "ap-south-1"),
 
     // Authentication configuration
-    authenticationFlowType: "USER_PASSWORD_AUTH",
+    authenticationFlowType: "USER_SRP_AUTH",
 
     // Token configuration
     tokenRefreshThreshold: 300000, // 5 minutes in milliseconds

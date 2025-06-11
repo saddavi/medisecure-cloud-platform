@@ -20,7 +20,7 @@ ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/${ROLE_NAME}"
 
 # Environment variables for Lambda
 COGNITO_USER_POOL_ID="ap-south-1_4Cr7XFUmS"  # Note: Different region from DynamoDB for existing users
-COGNITO_CLIENT_ID="34oik0kokq9l20kiqs3kvth2li"
+COGNITO_CLIENT_ID="9poj7iavug62uuif7sve7a6fo"
 DYNAMODB_TABLE_NAME="MediSecure-HealthData"
 
 echo "🔐 Using IAM Role: $ROLE_ARN"
