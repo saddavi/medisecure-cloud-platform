@@ -10,7 +10,8 @@
 
 ## 🚀 Live Demo
 
-**Production Website**: [https://d1aaifqtlfz7l5.cloudfront.net](https://d1aaifqtlfz7l5.cloudfront.net)  
+**Production Website**: [https://d1aaifqtlfz7l5.cloudfront.net](https://d1aaifqtlfz7l5.cloudfront.net) ✅ **LIVE**  
+**Custom Domain**: `healthcare.talharesume.com` 🚧 **DNS Ready** (SSL pending)  
 **Development Server**: [http://localhost:3000](http://localhost:3000)  
 **Test Credentials**: `test@medisecure.dev` / `TempPass123!`
 

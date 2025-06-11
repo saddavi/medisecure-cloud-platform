@@ -68,7 +68,10 @@ export function LoginPage() {
           </div>
           <h2 className="text-3xl font-bold text-neutral-900">Welcome back</h2>
           <p className="mt-2 text-sm text-neutral-600">
-            Sign in to your healthcare account
+            Modern healthcare platform for Qatar's digital transformation
+          </p>
+          <p className="mt-1 text-xs text-neutral-500">
+            Secure patient management system built with AWS cloud infrastructure
           </p>
         </div>
 
@@ -181,13 +184,36 @@ export function LoginPage() {
           </form>
         </div>
 
-        {/* Healthcare Compliance Notice */}
-        <div className="text-center">
-          <p className="text-xs text-neutral-500">
-            This system is HIPAA compliant and uses secure encryption
-            <br />
-            for all healthcare data transmission.
+        {/* Personal Portfolio Branding */}
+        <div className="text-center space-y-2">
+          <p className="text-sm font-medium text-primary-600">
+            AWS Cloud Engineering Portfolio Project by Talha Nasiruddin
           </p>
+          <p className="text-xs text-neutral-600">
+            Production healthcare platform built with AWS Lambda, DynamoDB, Cognito & CloudFront CDN
+          </p>
+          <p className="text-xs text-neutral-600">
+            Demonstrating production AWS expertise • Open to Qatar & remote Cloud Architecture/DevOps roles
+          </p>
+          <div className="flex items-center justify-center space-x-4 text-xs">
+            <a 
+              href="https://linkedin.com/in/talhanasiruddin" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary-600 hover:text-primary-700 font-medium"
+            >
+              LinkedIn Profile
+            </a>
+            <span className="text-neutral-400">•</span>
+            <a 
+              href="https://www.talharesume.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary-600 hover:text-primary-700 font-medium"
+            >
+              Portfolio & Resume
+            </a>
+          </div>
         </div>
       </div>
     </div>

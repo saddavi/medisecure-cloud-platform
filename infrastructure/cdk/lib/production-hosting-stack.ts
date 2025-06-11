@@ -10,9 +10,15 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 
 export interface ProductionHostingStackProps extends cdk.StackProps {
-  domainName?: string; // Optional custom domain
+  domainName?: string; // Optional custom domain (e.g., "medisecure.talharesume.com")
+  certificateArn?: string; // SSL certificate ARN for custom domain
+  hostedZoneId?: string; // Route53 hosted zone ID for domain
   stage: "dev" | "staging" | "production";
   targetRegion?: string; // Target region for optimization (e.g., me-south-1 for Qatar)
+  // Subdomain configuration for talharesume.com
+  useCustomDomain?: boolean; // Enable custom domain setup
+  baseDomain?: string; // Base domain (e.g., "talharesume.com")
+  subdomain?: string; // Subdomain prefix (e.g., "medisecure")
 }
 
 export class ProductionHostingStack extends cdk.Stack {
@@ -25,7 +31,17 @@ export class ProductionHostingStack extends cdk.Stack {
 
     const stage = props.stage;
     const targetRegion = props.targetRegion || "me-south-1"; // Default to Bahrain for Qatar market
-    const domainName = props.domainName || `medisecure-${stage}.healthcare.local`;
+    
+    // Custom domain configuration
+    const useCustomDomain = props.useCustomDomain || false;
+    const baseDomain = props.baseDomain || "talharesume.com";
+    const subdomain = props.subdomain || "medisecure";
+    const fullDomainName = useCustomDomain ? `${subdomain}.${baseDomain}` : undefined;
+    
+    // Legacy support for existing domain configuration
+    const customDomain = props.domainName || fullDomainName;
+    const certificateArn = props.certificateArn;
+    const hostedZoneId = props.hostedZoneId;
 
     // ============= S3 Bucket for Static Website Hosting =============
     // Optimized for Gulf region performance
@@ -72,12 +88,40 @@ export class ProductionHostingStack extends cdk.Stack {
       }
     );
 
+    // ============= SSL Certificate (if custom domain) =============
+    let certificate: certificatemanager.ICertificate | undefined;
+    if (customDomain) {
+      if (certificateArn) {
+        // Use existing certificate
+        certificate = certificatemanager.Certificate.fromCertificateArn(
+          this,
+          `MediSecure-Certificate-${stage}`,
+          certificateArn
+        );
+      } else if (useCustomDomain) {
+        // Create new certificate for subdomain
+        certificate = new certificatemanager.Certificate(
+          this,
+          `MediSecure-Certificate-${stage}`,
+          {
+            domainName: customDomain,
+            validation: certificatemanager.CertificateValidation.fromDns(),
+            subjectAlternativeNames: [`www.${customDomain}`], // Include www variant
+          }
+        );
+      }
+    }
+
     // ============= CloudFront Distribution =============
     this.distribution = new cloudfront.Distribution(
       this,
       `MediSecure-Distribution-${stage}`,
       {
         comment: `MediSecure Healthcare Platform - ${stage} Environment (Optimized for ${targetRegion})`,
+        
+        // Custom Domain Configuration
+        domainNames: customDomain ? [customDomain] : undefined,
+        certificate: certificate,
         
         // Origin Configuration
         defaultBehavior: {
@@ -161,6 +205,34 @@ export class ProductionHostingStack extends cdk.Stack {
 
     this.bucket.addToResourcePolicy(bucketPolicy);
 
+    // ============= Route53 DNS Record (if custom domain) =============
+    if (customDomain && hostedZoneId) {
+      const hostedZone = route53.HostedZone.fromHostedZoneAttributes(
+        this,
+        `MediSecure-HostedZone-${stage}`,
+        {
+          hostedZoneId: hostedZoneId,
+          zoneName: customDomain,
+        }
+      );
+
+      new route53.ARecord(this, `MediSecure-AliasRecord-${stage}`, {
+        zone: hostedZone,
+        target: route53.RecordTarget.fromAlias(
+          new targets.CloudFrontTarget(this.distribution)
+        ),
+      });
+
+      // Optional: Add www subdomain redirect
+      new route53.ARecord(this, `MediSecure-WWWRecord-${stage}`, {
+        zone: hostedZone,
+        recordName: "www",
+        target: route53.RecordTarget.fromAlias(
+          new targets.CloudFrontTarget(this.distribution)
+        ),
+      });
+    }
+
     // ============= Deployment Automation =============
     // Only deploy if build directory exists
     const deployment = new s3deploy.BucketDeployment(
@@ -204,12 +276,19 @@ export class ProductionHostingStack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, "WebsiteURL", {
-      value: `https://${this.distribution.distributionDomainName}`,
+      value: customDomain 
+        ? `https://${customDomain}` 
+        : `https://${this.distribution.distributionDomainName}`,
       description: "Website URL for MediSecure Healthcare Platform",
     });
 
+    new cdk.CfnOutput(this, "CustomDomainURL", {
+      value: customDomain ? `https://${customDomain}` : "No custom domain configured",
+      description: "Custom domain URL (if configured)",
+    });
+
     // Store domain name for external reference
-    this.domainName = this.distribution.distributionDomainName;
+    this.domainName = customDomain || this.distribution.distributionDomainName;
 
     // ============= Tags for Cost Management =============
     cdk.Tags.of(this).add("Project", "MediSecure");
@@ -270,6 +349,40 @@ export class ProductionHostingStack extends cdk.Stack {
           expiration: cdk.Duration.days(90),
         },
       ],
+    });
+  }
+
+  // ============= Stack Outputs =============
+  private createOutputs(customDomain?: string) {
+    // CloudFront Distribution URL
+    new cdk.CfnOutput(this, "DistributionUrl", {
+      value: `https://${this.distribution.distributionDomainName}`,
+      description: "CloudFront Distribution URL",
+    });
+
+    // Custom Domain URL (if configured)
+    if (customDomain) {
+      new cdk.CfnOutput(this, "CustomDomainUrl", {
+        value: `https://${customDomain}`,
+        description: "Custom Domain URL for MediSecure Platform",
+      });
+
+      new cdk.CfnOutput(this, "CustomDomainName", {
+        value: customDomain,
+        description: "Custom Domain Name",
+      });
+    }
+
+    // S3 Bucket Name
+    new cdk.CfnOutput(this, "S3BucketName", {
+      value: this.bucket.bucketName,
+      description: "S3 Bucket for static website hosting",
+    });
+
+    // Distribution ID for cache invalidation
+    new cdk.CfnOutput(this, "DistributionId", {
+      value: this.distribution.distributionId,
+      description: "CloudFront Distribution ID for cache invalidation",
     });
   }
 }
