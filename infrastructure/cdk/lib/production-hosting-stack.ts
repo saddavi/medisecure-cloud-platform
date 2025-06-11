@@ -26,18 +26,24 @@ export class ProductionHostingStack extends cdk.Stack {
   public readonly bucket: s3.Bucket;
   public readonly domainName: string;
 
-  constructor(scope: Construct, id: string, props: ProductionHostingStackProps) {
+  constructor(
+    scope: Construct,
+    id: string,
+    props: ProductionHostingStackProps
+  ) {
     super(scope, id, props);
 
     const stage = props.stage;
     const targetRegion = props.targetRegion || "me-south-1"; // Default to Bahrain for Qatar market
-    
+
     // Custom domain configuration
     const useCustomDomain = props.useCustomDomain || false;
     const baseDomain = props.baseDomain || "talharesume.com";
     const subdomain = props.subdomain || "medisecure";
-    const fullDomainName = useCustomDomain ? `${subdomain}.${baseDomain}` : undefined;
-    
+    const fullDomainName = useCustomDomain
+      ? `${subdomain}.${baseDomain}`
+      : undefined;
+
     // Legacy support for existing domain configuration
     const customDomain = props.domainName || fullDomainName;
     const certificateArn = props.certificateArn;
@@ -47,12 +53,12 @@ export class ProductionHostingStack extends cdk.Stack {
     // Optimized for Gulf region performance
     this.bucket = new s3.Bucket(this, `MediSecure-Frontend-${stage}`, {
       bucketName: `medisecure-frontend-${stage}-${this.account}-${targetRegion}`,
-      
+
       // Security Configuration
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
       enforceSSL: true,
-      
+
       // Lifecycle Management
       versioned: true,
       lifecycleRules: [
@@ -62,12 +68,13 @@ export class ProductionHostingStack extends cdk.Stack {
           noncurrentVersionExpiration: cdk.Duration.days(30),
         },
       ],
-      
+
       // Development vs Production Configuration
-      removalPolicy: stage === "production" 
-        ? cdk.RemovalPolicy.RETAIN 
-        : cdk.RemovalPolicy.DESTROY,
-      
+      removalPolicy:
+        stage === "production"
+          ? cdk.RemovalPolicy.RETAIN
+          : cdk.RemovalPolicy.DESTROY,
+
       // CORS for healthcare applications
       cors: [
         {
@@ -118,24 +125,25 @@ export class ProductionHostingStack extends cdk.Stack {
       `MediSecure-Distribution-${stage}`,
       {
         comment: `MediSecure Healthcare Platform - ${stage} Environment (Optimized for ${targetRegion})`,
-        
+
         // Custom Domain Configuration
         domainNames: customDomain ? [customDomain] : undefined,
         certificate: certificate,
-        
+
         // Origin Configuration
         defaultBehavior: {
           origin: origins.S3BucketOrigin.withOriginAccessControl(this.bucket, {
             originAccessControl,
           }),
-          
+
           // Performance Optimization for Healthcare Apps
-          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          viewerProtocolPolicy:
+            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-          
+
           // Compress for faster loading in Gulf region
           compress: true,
-          
+
           // Security Headers for Healthcare Compliance
           responseHeadersPolicy: this.createSecurityHeadersPolicy(stage),
         },
@@ -175,13 +183,14 @@ export class ProductionHostingStack extends cdk.Stack {
 
         // Global Edge Locations optimized for Qatar/Gulf Region
         // PriceClass.PRICE_CLASS_100 includes Middle East edge locations
-        priceClass: stage === "production" 
-          ? cloudfront.PriceClass.PRICE_CLASS_ALL 
-          : cloudfront.PriceClass.PRICE_CLASS_100, // Cost-optimized for development
-        
+        priceClass:
+          stage === "production"
+            ? cloudfront.PriceClass.PRICE_CLASS_ALL
+            : cloudfront.PriceClass.PRICE_CLASS_100, // Cost-optimized for development
+
         // Default root object
         defaultRootObject: "index.html",
-        
+
         // Enable logging for production monitoring
         enableLogging: stage === "production",
         logBucket: stage === "production" ? this.createLogBucket() : undefined,
@@ -243,17 +252,17 @@ export class ProductionHostingStack extends cdk.Stack {
         destinationBucket: this.bucket,
         distribution: this.distribution,
         distributionPaths: ["/*"],
-        
+
         // Deployment configuration
         retainOnDelete: stage === "production",
         memoryLimit: 512,
-        
+
         // Cache optimization
         cacheControl: [
           s3deploy.CacheControl.setPublic(),
           s3deploy.CacheControl.maxAge(cdk.Duration.hours(1)),
         ],
-        
+
         // Healthcare compliance: exclude sensitive files
         exclude: ["*.map", "*.env*", "config/*"],
       }
@@ -276,14 +285,16 @@ export class ProductionHostingStack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, "WebsiteURL", {
-      value: customDomain 
-        ? `https://${customDomain}` 
+      value: customDomain
+        ? `https://${customDomain}`
         : `https://${this.distribution.distributionDomainName}`,
       description: "Website URL for MediSecure Healthcare Platform",
     });
 
     new cdk.CfnOutput(this, "CustomDomainURL", {
-      value: customDomain ? `https://${customDomain}` : "No custom domain configured",
+      value: customDomain
+        ? `https://${customDomain}`
+        : "No custom domain configured",
       description: "Custom domain URL (if configured)",
     });
 
@@ -297,13 +308,15 @@ export class ProductionHostingStack extends cdk.Stack {
     cdk.Tags.of(this).add("CostCenter", "Healthcare-Platform");
   }
 
-  private createSecurityHeadersPolicy(stage: string): cloudfront.ResponseHeadersPolicy {
+  private createSecurityHeadersPolicy(
+    stage: string
+  ): cloudfront.ResponseHeadersPolicy {
     return new cloudfront.ResponseHeadersPolicy(
       this,
       `MediSecure-SecurityHeaders-${stage}`,
       {
         comment: `Security headers for MediSecure ${stage} environment`,
-        
+
         // HIPAA-Compliant Security Headers
         securityHeadersBehavior: {
           contentTypeOptions: { override: true },
@@ -312,7 +325,8 @@ export class ProductionHostingStack extends cdk.Stack {
             override: true,
           },
           referrerPolicy: {
-            referrerPolicy: cloudfront.HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
+            referrerPolicy:
+              cloudfront.HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
             override: true,
           },
           strictTransportSecurity: {

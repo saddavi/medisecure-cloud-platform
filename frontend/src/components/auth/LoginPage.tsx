@@ -190,24 +190,26 @@ export function LoginPage() {
             AWS Cloud Engineering Portfolio Project by Talha Nasiruddin
           </p>
           <p className="text-xs text-neutral-600">
-            Production healthcare platform built with AWS Lambda, DynamoDB, Cognito & CloudFront CDN
+            Production healthcare platform built with AWS Lambda, DynamoDB,
+            Cognito & CloudFront CDN
           </p>
           <p className="text-xs text-neutral-600">
-            Demonstrating production AWS expertise • Open to Qatar & remote Cloud Architecture/DevOps roles
+            Demonstrating production AWS expertise • Open to Qatar & remote
+            Cloud Architecture/DevOps roles
           </p>
           <div className="flex items-center justify-center space-x-4 text-xs">
-            <a 
-              href="https://linkedin.com/in/talhanasiruddin" 
-              target="_blank" 
+            <a
+              href="https://linkedin.com/in/talhanasiruddin"
+              target="_blank"
               rel="noopener noreferrer"
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
               LinkedIn Profile
             </a>
             <span className="text-neutral-400">•</span>
-            <a 
-              href="https://www.talharesume.com" 
-              target="_blank" 
+            <a
+              href="https://www.talharesume.com"
+              target="_blank"
               rel="noopener noreferrer"
               className="text-primary-600 hover:text-primary-700 font-medium"
             >

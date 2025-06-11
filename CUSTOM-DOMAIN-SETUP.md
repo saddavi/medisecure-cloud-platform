@@ -26,12 +26,14 @@ npx cdk deploy MediSecureCustomDomain --app "npx ts-node cdk-custom-domain.ts"
 After deployment, you'll need to add DNS records to your `talharesume.com` domain in Namecheap:
 
 **Namecheap DNS Setup Steps:**
+
 1. **Login to Namecheap** → Go to [namecheap.com](https://namecheap.com) and sign in
-2. **Domain List** → Click "Manage" next to `talharesume.com` 
+2. **Domain List** → Click "Manage" next to `talharesume.com`
 3. **Advanced DNS** → Click the "Advanced DNS" tab
 4. **Add Record** → Click "Add New Record"
 
 **DNS Record to Add:**
+
 ```
 Type: CNAME Record
 Host: healthcare
@@ -42,15 +44,17 @@ TTL: 300 (5 minutes) or Automatic
 ⚠️ **Important**: Do NOT include `https://` in the Value field - just the domain name!
 
 **Example after deployment:**
+
 ```
 Type: CNAME Record
-Host: healthcare  
+Host: healthcare
 Value: d1aaifqtlfz7l5.cloudfront.net
 TTL: 300
 ```
 
 **SSL Certificate DNS Validation:**
 AWS will also provide DNS validation records that look like this:
+
 ```
 Type: CNAME Record
 Host: _acme-challenge.healthcare
@@ -98,6 +102,7 @@ npx cdk deploy ProductionHostingStack
 ---
 
 **Ready to proceed?** Let me know if you want to:
+
 1. ✅ **Deploy with custom domain** → Run the commands above
 2. ✅ **Keep current CloudFront URL** → Continue as-is
 3. ✅ **Choose different subdomain** → Modify the configuration

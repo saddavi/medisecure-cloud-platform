@@ -34,7 +34,8 @@ const hostingStack = new ProductionHostingStack(app, "MediSecure-Hosting", {
   },
   stage: stage as "dev" | "staging" | "production",
   targetRegion: "me-south-1", // Optimize for Bahrain/Qatar market
-  description: "MediSecure Healthcare Platform - Frontend Hosting optimized for Gulf region",
+  description:
+    "MediSecure Healthcare Platform - Frontend Hosting optimized for Gulf region",
   tags: {
     Project: "MediSecure",
     Environment: stage,
