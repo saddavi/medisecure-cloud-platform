@@ -93,6 +93,23 @@ export class MediSecureStack extends cdk.Stack {
     // Grant DynamoDB permissions with least privilege
     healthDataTable.grantReadWriteData(lambdaRole);
 
+    // Grant AWS Bedrock permissions for AI symptom analysis
+    lambdaRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream",
+        ],
+        resources: [
+          // Claude 3 Haiku model for cost-effective symptom analysis
+          "arn:aws:bedrock:*::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
+          // Claude 3 Sonnet for more complex analysis if needed
+          "arn:aws:bedrock:*::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0",
+        ],
+      })
+    );
+
     // ============= Lambda Functions =============
 
     // Patient Management Lambda - Updated to Node.js 20 (current LTS)

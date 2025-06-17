@@ -68,7 +68,7 @@ MediSecure Cloud addresses healthcare coordination challenges in Qatar and the M
 | Component            | Status        | Function                   | Region     |
 | -------------------- | ------------- | -------------------------- | ---------- |
 | **Custom Domain**    | ✅ LIVE       | healthcare.talharesume.com | Global     |
-| **SSL Certificate** | ✅ Active     | AWS Certificate Manager    | us-east-1  |
+| **SSL Certificate**  | ✅ Active     | AWS Certificate Manager    | us-east-1  |
 | **React Frontend**   | ✅ LIVE       | Production CloudFront CDN  | Global     |
 | **S3 Hosting**       | ✅ Active     | Static website (encrypted) | us-east-1  |
 | **AWS Amplify**      | ✅ Integrated | Authentication service     | Configured |
@@ -90,7 +90,7 @@ MediSecure Cloud addresses healthcare coordination challenges in Qatar and the M
 
 ```bash
 # 🌐 Custom Domain: https://healthcare.talharesume.com
-# 📡 CloudFront: https://d1aaifqtlfz7l5.cloudfront.net  
+# 📡 CloudFront: https://d1aaifqtlfz7l5.cloudfront.net
 # 🔑 Login: test@medisecure.dev / TempPass123!
 # ✅ SSL Certificate & Professional Domain
 ```
