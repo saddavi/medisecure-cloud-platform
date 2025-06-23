@@ -2,14 +2,14 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { v4 as uuidv4 } from "uuid";
 import BedrockClient from "./bedrock-client";
 import PromptTemplates from "./prompt-templates";
-import { 
-  AnalyzeSymptomRequest, 
-  AnalyzeSymptomResponse, 
+import {
+  AnalyzeSymptomRequest,
+  AnalyzeSymptomResponse,
   AnonymousSession,
   AnonymousSymptomResponse,
   SymptomAnalysisRecord,
   SUPPORTED_LANGUAGES,
-  QATAR_EMERGENCY_CONTACTS
+  QATAR_EMERGENCY_CONTACTS,
 } from "./symptom-types";
 import { DynamoDBService } from "../utils/dynamodb-service";
 
@@ -25,13 +25,12 @@ const rateLimitCache = new Map<string, { count: number; resetTime: number }>();
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-  
   // CORS headers for Qatar domain
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*", // Update with your domain in production
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
   };
 
   try {
@@ -40,7 +39,7 @@ export const handler = async (
       return {
         statusCode: 200,
         headers: corsHeaders,
-        body: ""
+        body: "",
       };
     }
 
@@ -53,15 +52,15 @@ export const handler = async (
           success: false,
           error: {
             code: "METHOD_NOT_ALLOWED",
-            message: "Only POST method is allowed"
-          }
-        })
+            message: "Only POST method is allowed",
+          },
+        }),
       };
     }
 
     // Parse request body
     const request: AnalyzeSymptomRequest = JSON.parse(event.body || "{}");
-    
+
     // Validate request
     const validationError = validateRequest(request);
     if (validationError) {
@@ -70,8 +69,8 @@ export const handler = async (
         headers: corsHeaders,
         body: JSON.stringify({
           success: false,
-          error: validationError
-        })
+          error: validationError,
+        }),
       };
     }
 
@@ -84,14 +83,14 @@ export const handler = async (
         headers: corsHeaders,
         body: JSON.stringify({
           success: false,
-          error: rateLimitError
-        })
+          error: rateLimitError,
+        }),
       };
     }
 
     // Generate anonymous session ID
     const sessionId = `anon_${uuidv4()}`;
-    
+
     // Initialize services
     const bedrockClient = new BedrockClient();
     const dynamoService = new DynamoDBService();
@@ -105,18 +104,18 @@ export const handler = async (
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours TTL
       ipAddress: clientIP,
       userAgent: event.requestContext.identity.userAgent || undefined,
-      convertedToPatient: false
+      convertedToPatient: false,
     };
 
     // Analyze symptoms with AI
     console.log(`Analyzing symptoms for session ${sessionId}`);
-    
+
     const aiAnalysis = await bedrockClient.analyzeSymptoms(
       request.symptoms.description,
       request.language,
       {
         age: request.patientContext?.age,
-        gender: request.patientContext?.gender
+        gender: request.patientContext?.gender,
       }
     );
 
@@ -127,13 +126,19 @@ export const handler = async (
       urgencyScore: aiAnalysis.urgencyScore,
       recommendations: {
         action: aiAnalysis.recommendations.action,
-        timeframe: aiAnalysis.recommendations.timeframe
+        timeframe: aiAnalysis.recommendations.timeframe,
       },
-      generalAdvice: generateGeneralAdvice(aiAnalysis.severity, request.language),
-      whenToSeekHelp: generateSeekHelpAdvice(aiAnalysis.severity, request.language),
+      generalAdvice: generateGeneralAdvice(
+        aiAnalysis.severity,
+        request.language
+      ),
+      whenToSeekHelp: generateSeekHelpAdvice(
+        aiAnalysis.severity,
+        request.language
+      ),
       registrationPrompt: generateRegistrationPrompt(request.language),
       sessionId,
-      language: request.language
+      language: request.language,
     };
 
     // Store session data in DynamoDB with TTL
@@ -150,26 +155,29 @@ export const handler = async (
         confidenceScore: 0.8, // Default confidence score for anonymous analysis
         recommendations: {
           ...aiAnalysis.recommendations,
-          specialist: aiAnalysis.recommendations.specialist as any // Type assertion for flexibility
-        }
+          specialist: aiAnalysis.recommendations.specialist as any, // Type assertion for flexibility
+        },
       },
       isAnonymous: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ttl: Math.floor(anonymousSession.expiresAt.getTime() / 1000), // DynamoDB TTL
-      culturalContext: "qatar"
+      culturalContext: "qatar",
     };
 
     await dynamoService.putItem(sessionRecord);
 
     // Handle emergency cases
     if (aiAnalysis.severity === "Emergency" || aiAnalysis.urgencyScore >= 8) {
-      anonymousResponse.emergencyWarning = request.language === "ar"
-        ? "تحذير: قد تكون هذه حالة طارئة. اتصل بـ 999 أو توجه إلى أقرب مستشفى فوراً."
-        : "WARNING: This may be an emergency. Call 999 or go to the nearest hospital immediately.";
-      
+      anonymousResponse.emergencyWarning =
+        request.language === "ar"
+          ? "تحذير: قد تكون هذه حالة طارئة. اتصل بـ 999 أو توجه إلى أقرب مستشفى فوراً."
+          : "WARNING: This may be an emergency. Call 999 or go to the nearest hospital immediately.";
+
       // Log emergency case for monitoring
-      console.error(`EMERGENCY CASE DETECTED: Session ${sessionId}, Symptoms: ${request.symptoms.description}`);
+      console.error(
+        `EMERGENCY CASE DETECTED: Session ${sessionId}, Symptoms: ${request.symptoms.description}`
+      );
     }
 
     const response: AnalyzeSymptomResponse = {
@@ -178,19 +186,18 @@ export const handler = async (
       sessionId,
       rateLimit: {
         remaining: getRemainingRequests(clientIP),
-        resetTime: new Date(getResetTime(clientIP))
-      }
+        resetTime: new Date(getResetTime(clientIP)),
+      },
     };
 
     return {
       statusCode: 200,
       headers: corsHeaders,
-      body: JSON.stringify(response)
+      body: JSON.stringify(response),
     };
-
   } catch (error) {
     console.error("Anonymous symptom analysis error:", error);
-    
+
     return {
       statusCode: 500,
       headers: corsHeaders,
@@ -198,9 +205,10 @@ export const handler = async (
         success: false,
         error: {
           code: "INTERNAL_SERVER_ERROR",
-          message: "Symptom analysis temporarily unavailable. Please try again or consult a healthcare professional."
-        }
-      })
+          message:
+            "Symptom analysis temporarily unavailable. Please try again or consult a healthcare professional.",
+        },
+      }),
     };
   }
 };
@@ -208,32 +216,35 @@ export const handler = async (
 /**
  * Validate incoming request
  */
-function validateRequest(request: AnalyzeSymptomRequest): { code: string; message: string } | null {
+function validateRequest(
+  request: AnalyzeSymptomRequest
+): { code: string; message: string } | null {
   if (!request.symptoms?.description?.trim()) {
     return {
       code: "MISSING_SYMPTOMS",
-      message: "Symptom description is required"
+      message: "Symptom description is required",
     };
   }
 
   if (request.symptoms.description.length < 3) {
     return {
       code: "SYMPTOMS_TOO_SHORT",
-      message: "Please provide more detailed symptom description"
+      message: "Please provide more detailed symptom description",
     };
   }
 
   if (request.symptoms.description.length > 2000) {
     return {
       code: "SYMPTOMS_TOO_LONG",
-      message: "Symptom description is too long. Please limit to 2000 characters."
+      message:
+        "Symptom description is too long. Please limit to 2000 characters.",
     };
   }
 
   if (!SUPPORTED_LANGUAGES.includes(request.language)) {
     return {
       code: "UNSUPPORTED_LANGUAGE",
-      message: "Supported languages: en, ar"
+      message: "Supported languages: en, ar",
     };
   }
 
@@ -243,26 +254,30 @@ function validateRequest(request: AnalyzeSymptomRequest): { code: string; messag
 /**
  * Rate limiting for anonymous users
  */
-function checkRateLimit(clientIP: string): { code: string; message: string } | null {
+function checkRateLimit(
+  clientIP: string
+): { code: string; message: string } | null {
   const now = Date.now();
   const hourInMs = 60 * 60 * 1000;
   const resetTime = Math.ceil(now / hourInMs) * hourInMs;
-  
+
   const existing = rateLimitCache.get(clientIP);
-  
+
   if (!existing || existing.resetTime <= now) {
     // New hour or new IP
     rateLimitCache.set(clientIP, { count: 1, resetTime });
     return null;
   }
-  
-  if (existing.count >= 10) { // 10 requests per hour for anonymous users
+
+  if (existing.count >= 10) {
+    // 10 requests per hour for anonymous users
     return {
       code: "RATE_LIMIT_EXCEEDED",
-      message: "Rate limit exceeded. Please try again later or register for unlimited access."
+      message:
+        "Rate limit exceeded. Please try again later or register for unlimited access.",
     };
   }
-  
+
   existing.count++;
   return null;
 }
@@ -280,7 +295,10 @@ function getResetTime(clientIP: string): number {
 /**
  * Generate general advice based on severity
  */
-function generateGeneralAdvice(severity: string, language: "en" | "ar"): string {
+function generateGeneralAdvice(
+  severity: string,
+  language: "en" | "ar"
+): string {
   if (language === "ar") {
     switch (severity) {
       case "Low":
@@ -313,10 +331,14 @@ function generateGeneralAdvice(severity: string, language: "en" | "ar"): string 
 /**
  * Generate advice on when to seek help
  */
-function generateSeekHelpAdvice(severity: string, language: "en" | "ar"): string {
-  const emergencyNumbers = language === "ar" 
-    ? "999 للطوارئ أو +974 4439 4444 لمؤسسة حمد الطبية"
-    : "999 for emergencies or +974 4439 4444 for Hamad Medical Corporation";
+function generateSeekHelpAdvice(
+  severity: string,
+  language: "en" | "ar"
+): string {
+  const emergencyNumbers =
+    language === "ar"
+      ? "999 للطوارئ أو +974 4439 4444 لمؤسسة حمد الطبية"
+      : "999 for emergencies or +974 4439 4444 for Hamad Medical Corporation";
 
   if (language === "ar") {
     return `اطلب المساعدة الطبية الفورية إذا:

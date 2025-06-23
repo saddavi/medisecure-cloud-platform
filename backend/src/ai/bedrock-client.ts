@@ -1,4 +1,7 @@
-import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
+import {
+  BedrockRuntimeClient,
+  InvokeModelCommand,
+} from "@aws-sdk/client-bedrock-runtime";
 
 /**
  * AWS Bedrock Client for AI-powered healthcare analysis
@@ -34,9 +37,9 @@ export class BedrockClient {
       maxTokens: 1000, // Cost-effective limit
       temperature: 0.3, // Balanced creativity/consistency for medical advice
     };
-    
-    this.client = new BedrockRuntimeClient({ 
-      region: this.config.region 
+
+    this.client = new BedrockRuntimeClient({
+      region: this.config.region,
     });
   }
 
@@ -56,8 +59,12 @@ export class BedrockClient {
     }
   ): Promise<AIResponse> {
     try {
-      const prompt = this.buildSymptomPrompt(symptoms, language, patientContext);
-      
+      const prompt = this.buildSymptomPrompt(
+        symptoms,
+        language,
+        patientContext
+      );
+
       const command = new InvokeModelCommand({
         modelId: "anthropic.claude-3-haiku-20240307-v1:0", // Cost-effective model
         contentType: "application/json",
@@ -69,17 +76,16 @@ export class BedrockClient {
           messages: [
             {
               role: "user",
-              content: prompt
-            }
-          ]
-        })
+              content: prompt,
+            },
+          ],
+        }),
       });
 
       const response = await this.client.send(command);
       const responseBody = JSON.parse(new TextDecoder().decode(response.body));
-      
+
       return this.parseAIResponse(responseBody.content[0].text, language);
-      
     } catch (error) {
       console.error("Bedrock AI analysis error:", error);
       throw new Error("AI analysis temporarily unavailable. Please try again.");
@@ -94,12 +100,17 @@ export class BedrockClient {
     language: "en" | "ar",
     patientContext?: any
   ): string {
-    const contextInfo = patientContext 
-      ? `Patient context: Age ${patientContext.age}, Gender ${patientContext.gender}, Medical history: ${patientContext.medicalHistory?.join(", ") || "None"}`
+    const contextInfo = patientContext
+      ? `Patient context: Age ${patientContext.age}, Gender ${
+          patientContext.gender
+        }, Medical history: ${
+          patientContext.medicalHistory?.join(", ") || "None"
+        }`
       : "";
 
-    const basePrompt = language === "ar" 
-      ? `أنت مساعد طبي ذكي متخصص في الرعاية الصحية في قطر. حلل الأعراض التالية وقدم تقييماً طبياً أولياً.
+    const basePrompt =
+      language === "ar"
+        ? `أنت مساعد طبي ذكي متخصص في الرعاية الصحية في قطر. حلل الأعراض التالية وقدم تقييماً طبياً أولياً.
 
 الأعراض: ${symptoms}
 ${contextInfo}
@@ -119,7 +130,7 @@ ${contextInfo}
 }
 
 مهم: هذا تقييم أولي وليس تشخيصاً طبياً نهائياً. يجب استشارة طبيب مختص.`
-      : `You are an intelligent medical assistant specialized in Qatar's healthcare system. Analyze the following symptoms and provide a preliminary medical assessment.
+        : `You are an intelligent medical assistant specialized in Qatar's healthcare system. Analyze the following symptoms and provide a preliminary medical assessment.
 
 Symptoms: ${symptoms}
 ${contextInfo}
@@ -158,7 +169,7 @@ Important: This is a preliminary assessment, not a final medical diagnosis. Plea
           urgencyScore: parsed.urgencyScore,
           recommendations: parsed.recommendations,
           followUpQuestions: parsed.followUpQuestions || [],
-          language
+          language,
         };
       }
     } catch (error) {
@@ -167,17 +178,18 @@ Important: This is a preliminary assessment, not a final medical diagnosis. Plea
 
     // Fallback response if parsing fails
     return {
-      analysis: language === "ar" 
-        ? "عذراً، حدث خطأ في تحليل الأعراض. يرجى المحاولة مرة أخرى أو استشارة طبيب."
-        : "Sorry, there was an error analyzing symptoms. Please try again or consult a healthcare professional.",
+      analysis:
+        language === "ar"
+          ? "عذراً، حدث خطأ في تحليل الأعراض. يرجى المحاولة مرة أخرى أو استشارة طبيب."
+          : "Sorry, there was an error analyzing symptoms. Please try again or consult a healthcare professional.",
       severity: "Medium",
       urgencyScore: 5,
       recommendations: {
         action: "appointment",
-        timeframe: language === "ar" ? "خلال 24-48 ساعة" : "within 24-48 hours"
+        timeframe: language === "ar" ? "خلال 24-48 ساعة" : "within 24-48 hours",
       },
       followUpQuestions: [],
-      language
+      language,
     };
   }
 }

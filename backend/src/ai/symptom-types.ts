@@ -84,15 +84,15 @@ export interface HealthRecommendations {
   redFlags?: string[]; // warning signs to watch for
 }
 
-export type RecommendedAction = 
-  | "self-care" 
-  | "appointment" 
-  | "urgent-care" 
-  | "emergency" 
+export type RecommendedAction =
+  | "self-care"
+  | "appointment"
+  | "urgent-care"
+  | "emergency"
   | "telemedicine"
   | "specialist-referral";
 
-export type MedicalSpecialty = 
+export type MedicalSpecialty =
   | "family-medicine"
   | "internal-medicine"
   | "cardiology"
@@ -171,7 +171,7 @@ export interface QatarHealthcareProvider {
   languages: ("en" | "ar")[];
 }
 
-export type QatarLocation = 
+export type QatarLocation =
   | "doha-city"
   | "west-bay"
   | "al-rayyan"
@@ -207,18 +207,18 @@ export interface SymptomAnalysisRecord {
   SK: string; // "SYMPTOM_CHECK#{timestamp}"
   GSI1PK?: string; // "SYMPTOM_CHECKS" for querying
   GSI1SK?: string; // timestamp for sorting
-  
+
   // Data fields
   symptoms: SymptomInput[];
   aiAnalysis: AISymptomAnalysis;
   patientContext?: PatientContext;
   isAnonymous: boolean;
-  
+
   // Metadata
   createdAt: string;
   updatedAt: string;
   ttl?: number; // for anonymous sessions
-  
+
   // Qatar-specific
   location?: QatarLocation;
   culturalContext?: "qatar" | "gulf" | "general";
@@ -292,9 +292,30 @@ export interface RateLimitConfig {
 // ============= Validation Schemas =============
 
 export const SUPPORTED_LANGUAGES = ["en", "ar"] as const;
-export const SYMPTOM_SEVERITIES = ["Low", "Medium", "High", "Emergency"] as const;
-export const RECOMMENDED_ACTIONS = ["self-care", "appointment", "urgent-care", "emergency", "telemedicine", "specialist-referral"] as const;
-export const QATAR_LOCATIONS = ["doha-city", "west-bay", "al-rayyan", "al-wakrah", "al-khor", "dukhan", "mesaieed", "other"] as const;
+export const SYMPTOM_SEVERITIES = [
+  "Low",
+  "Medium",
+  "High",
+  "Emergency",
+] as const;
+export const RECOMMENDED_ACTIONS = [
+  "self-care",
+  "appointment",
+  "urgent-care",
+  "emergency",
+  "telemedicine",
+  "specialist-referral",
+] as const;
+export const QATAR_LOCATIONS = [
+  "doha-city",
+  "west-bay",
+  "al-rayyan",
+  "al-wakrah",
+  "al-khor",
+  "dukhan",
+  "mesaieed",
+  "other",
+] as const;
 
 // ============= Constants =============
 
@@ -304,29 +325,29 @@ export const QATAR_EMERGENCY_CONTACTS: QatarEmergencyContact[] = [
     number: "999",
     type: "ambulance",
     description: "All emergency services",
-    language: "both"
+    language: "both",
   },
   {
     name: "Hamad Medical Corporation",
     number: "+974 4439 4444",
     type: "hospital",
     description: "Main public hospital system",
-    language: "both"
+    language: "both",
   },
   {
     name: "Qatar Red Crescent",
     number: "+974 4442 2222",
     type: "ambulance",
     description: "Emergency medical services",
-    language: "both"
+    language: "both",
   },
   {
     name: "Poison Control",
     number: "+974 4439 9999",
     type: "poison-control",
     description: "Poison control and drug information",
-    language: "both"
-  }
+    language: "both",
+  },
 ];
 
 export const AI_MODEL_CONFIGS: Record<string, AIModelConfig> = {
@@ -335,15 +356,15 @@ export const AI_MODEL_CONFIGS: Record<string, AIModelConfig> = {
     maxTokens: 1000,
     temperature: 0.3,
     region: "us-east-1",
-    costPerToken: 0.00025 // USD per 1K tokens
+    costPerToken: 0.00025, // USD per 1K tokens
   },
   "claude-3-sonnet": {
     modelId: "anthropic.claude-3-sonnet-20240229-v1:0",
     maxTokens: 1000,
     temperature: 0.3,
     region: "us-east-1",
-    costPerToken: 0.003 // USD per 1K tokens
-  }
+    costPerToken: 0.003, // USD per 1K tokens
+  },
 };
 
 export default {
@@ -352,5 +373,5 @@ export default {
   RECOMMENDED_ACTIONS,
   QATAR_LOCATIONS,
   QATAR_EMERGENCY_CONTACTS,
-  AI_MODEL_CONFIGS
+  AI_MODEL_CONFIGS,
 };

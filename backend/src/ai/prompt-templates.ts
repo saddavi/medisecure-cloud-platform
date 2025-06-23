@@ -13,16 +13,30 @@ export interface PromptContext {
 }
 
 export class PromptTemplates {
-  
   /**
    * Main symptom analysis prompt with cultural considerations
    */
   static getSymptomAnalysisPrompt(context: PromptContext): string {
-    const { symptoms, language, patientAge, patientGender, medicalHistory, culturalContext } = context;
-    
-    const contextInfo = this.buildContextInfo(patientAge, patientGender, medicalHistory, language);
-    const culturalNote = this.getCulturalConsiderations(culturalContext || "qatar", language);
-    
+    const {
+      symptoms,
+      language,
+      patientAge,
+      patientGender,
+      medicalHistory,
+      culturalContext,
+    } = context;
+
+    const contextInfo = this.buildContextInfo(
+      patientAge,
+      patientGender,
+      medicalHistory,
+      language
+    );
+    const culturalNote = this.getCulturalConsiderations(
+      culturalContext || "qatar",
+      language
+    );
+
     if (language === "ar") {
       return `أنت مساعد طبي ذكي متخصص في النظام الصحي القطري. حلل الأعراض التالية وقدم تقييماً طبياً أولياً متوافقاً مع الثقافة الإسلامية والممارسات الطبية في دولة قطر.
 
@@ -89,7 +103,10 @@ Important disclaimer: This is a preliminary assessment, not a final medical diag
   /**
    * Anonymous public symptom checker prompt (for non-logged-in users)
    */
-  static getAnonymousSymptomPrompt(symptoms: string, language: "en" | "ar"): string {
+  static getAnonymousSymptomPrompt(
+    symptoms: string,
+    language: "en" | "ar"
+  ): string {
     if (language === "ar") {
       return `أنت مساعد طبي ذكي يقدم تقييماً أولياً للأعراض. هذا تقييم مجاني ومجهول للأعراض التالية:
 
@@ -140,7 +157,10 @@ Disclaimer: This is a preliminary assessment only. Please consult a qualified he
   /**
    * Follow-up question generation prompt
    */
-  static getFollowUpPrompt(initialSymptoms: string, language: "en" | "ar"): string {
+  static getFollowUpPrompt(
+    initialSymptoms: string,
+    language: "en" | "ar"
+  ): string {
     if (language === "ar") {
       return `بناءً على الأعراض المبدئية: "${initialSymptoms}"
 
@@ -169,7 +189,10 @@ Suggest 3-5 important follow-up questions to improve diagnosis:
   /**
    * Emergency assessment prompt for high-severity symptoms
    */
-  static getEmergencyAssessmentPrompt(symptoms: string, language: "en" | "ar"): string {
+  static getEmergencyAssessmentPrompt(
+    symptoms: string,
+    language: "en" | "ar"
+  ): string {
     if (language === "ar") {
       return `تقييم طارئ للأعراض التالية: ${symptoms}
 
@@ -213,26 +236,30 @@ In emergency: Call 999 immediately`;
     language: "en" | "ar" = "en"
   ): string {
     if (!age && !gender && !medicalHistory?.length) return "";
-    
+
     const parts: string[] = [];
-    
+
     if (age) {
       parts.push(language === "ar" ? `العمر: ${age} سنة` : `Age: ${age} years`);
     }
-    
+
     if (gender) {
-      parts.push(language === "ar" 
-        ? `الجنس: ${gender === "male" ? "ذكر" : "أنثى"}` 
-        : `Gender: ${gender}`);
+      parts.push(
+        language === "ar"
+          ? `الجنس: ${gender === "male" ? "ذكر" : "أنثى"}`
+          : `Gender: ${gender}`
+      );
     }
-    
+
     if (medicalHistory?.length) {
-      parts.push(language === "ar" 
-        ? `التاريخ المرضي: ${medicalHistory.join("، ")}` 
-        : `Medical history: ${medicalHistory.join(", ")}`);
+      parts.push(
+        language === "ar"
+          ? `التاريخ المرضي: ${medicalHistory.join("، ")}`
+          : `Medical history: ${medicalHistory.join(", ")}`
+      );
     }
-    
-    return language === "ar" 
+
+    return language === "ar"
       ? `معلومات المريض: ${parts.join("، ")}`
       : `Patient information: ${parts.join(", ")}`;
   }
@@ -240,7 +267,10 @@ In emergency: Call 999 immediately`;
   /**
    * Get cultural considerations for the region
    */
-  private static getCulturalConsiderations(region: "qatar" | "gulf" | "general", language: "en" | "ar"): string {
+  private static getCulturalConsiderations(
+    region: "qatar" | "gulf" | "general",
+    language: "en" | "ar"
+  ): string {
     if (language === "ar") {
       switch (region) {
         case "qatar":
