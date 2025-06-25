@@ -31,7 +31,7 @@ export class BedrockClient {
   private client: BedrockRuntimeClient;
   private config: BedrockConfig;
 
-  constructor(region: string = "us-east-1") {
+  constructor(region: string = "ap-south-1") {
     this.config = {
       region,
       maxTokens: 1000, // Cost-effective limit
@@ -41,6 +41,39 @@ export class BedrockClient {
     this.client = new BedrockRuntimeClient({
       region: this.config.region,
     });
+  }
+
+  /**
+   * Get the best available model for symptom analysis
+   * Falls back to Titan if Claude is not accessible
+   */
+  private async getBestAvailableModel(): Promise<{modelId: string, isClaudeModel: boolean}> {
+    // Try Claude first (preferred for medical analysis)
+    const claudeModel = "anthropic.claude-3-haiku-20240307-v1:0";
+    
+    // Fallback to Titan (always available)
+    const titanModel = "amazon.titan-text-lite-v1";
+    
+    try {
+      // Test Claude access with a minimal request
+      const testCommand = new InvokeModelCommand({
+        modelId: claudeModel,
+        contentType: "application/json",
+        accept: "application/json",
+        body: JSON.stringify({
+          anthropic_version: "bedrock-2023-05-31",
+          max_tokens: 10,
+          messages: [{ role: "user", content: "test" }]
+        })
+      });
+      
+      await this.client.send(testCommand);
+      console.log("✅ Using Claude 3 Haiku for medical analysis");
+      return { modelId: claudeModel, isClaudeModel: true };
+    } catch (error) {
+      console.log("⚠️ Claude not available, falling back to Titan");
+      return { modelId: titanModel, isClaudeModel: false };
+    }
   }
 
   /**
@@ -59,33 +92,54 @@ export class BedrockClient {
     }
   ): Promise<AIResponse> {
     try {
+      const { modelId, isClaudeModel } = await this.getBestAvailableModel();
+      
       const prompt = this.buildSymptomPrompt(
         symptoms,
         language,
         patientContext
       );
 
-      const command = new InvokeModelCommand({
-        modelId: "anthropic.claude-3-haiku-20240307-v1:0", // Cost-effective model
-        contentType: "application/json",
-        accept: "application/json",
-        body: JSON.stringify({
+      let requestBody: any;
+      
+      if (isClaudeModel) {
+        // Claude format
+        requestBody = {
           anthropic_version: "bedrock-2023-05-31",
           max_tokens: this.config.maxTokens,
           temperature: this.config.temperature,
-          messages: [
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-        }),
+          messages: [{
+            role: "user",
+            content: prompt,
+          }],
+        };
+      } else {
+        // Titan format
+        requestBody = {
+          inputText: prompt,
+          textGenerationConfig: {
+            maxTokenCount: this.config.maxTokens,
+            temperature: this.config.temperature,
+            topP: 0.9,
+          }
+        };
+      }
+
+      const command = new InvokeModelCommand({
+        modelId,
+        contentType: "application/json",
+        accept: "application/json",
+        body: JSON.stringify(requestBody),
       });
 
       const response = await this.client.send(command);
       const responseBody = JSON.parse(new TextDecoder().decode(response.body));
 
-      return this.parseAIResponse(responseBody.content[0].text, language);
+      const aiText = isClaudeModel 
+        ? responseBody.content[0].text 
+        : responseBody.results[0].outputText;
+
+      return this.parseAIResponse(aiText, language);
     } catch (error) {
       console.error("Bedrock AI analysis error:", error);
       throw new Error("AI analysis temporarily unavailable. Please try again.");

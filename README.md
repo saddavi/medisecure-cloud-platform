@@ -31,17 +31,19 @@ MediSecure Cloud addresses healthcare coordination challenges in Qatar and the M
 ```
 ┌─────────────────────────────────────────────────────┐
 │              MediSecure Cloud Platform              │
-│           (Production AWS Multi-Region)             │
+│     (Production AWS Multi-Region + AI-Powered)      │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
 │  Frontend (React + TypeScript)                     │
 │  ├── Production: CloudFront CDN                     │
 │  ├── S3 Static Hosting (encrypted)                  │
+│  ├── AI Symptom Checker (Bilingual)                 │
 │  └── Development: localhost:3000                    │
 │                                                     │
-│  ┌─────────────┐    ap-south-1 (Mumbai)            │
+│  ┌─────────────┐    me-south-1 (Bahrain)           │
 │  │ API Gateway │ ── JWT Token Validation            │
 │  │   + CORS    │ ── Healthcare API Endpoints        │
+│  │            │ ── AI Symptom Analysis              │
 │  └─────────────┘                                    │
 │         │                                           │
 │         ▼                                           │
@@ -49,21 +51,22 @@ MediSecure Cloud addresses healthcare coordination challenges in Qatar and the M
 │  │   Lambda    │ ── Patient CRUD Operations         │
 │  │ Functions   │ ── Authentication Handlers         │
 │  │   Node.js   │ ── HIPAA-Compliant Processing      │
+│  │            │ ── AI Symptom Analysis              │
 │  └─────────────┘                                    │
 │         │                                           │
 │         ▼                                           │
 │  ┌─────────────┬─────────────┬─────────────┐       │
-│  │  DynamoDB   │   Cognito   │ CloudFront  │       │
-│  │ (Bahrain)   │  (Mumbai)   │  (Global)   │       │
-│  │ • Patients  │ • JWT Auth  │ • CDN Edge  │       │
-│  │ • GSI Fixed │ • MFA Ready │ • SSL Certs │       │
+│  │  DynamoDB   │   Cognito   │   Bedrock   │       │
+│  │ (Bahrain)   │  (Mumbai)   │  (Mumbai)   │       │
+│  │ • Patients  │ • JWT Auth  │ • Claude AI │       │
+│  │ • Sessions  │ • MFA Ready │ • AR/EN NLP │       │
 │  └─────────────┴─────────────┴─────────────┘       │
 └─────────────────────────────────────────────────────┘
 ```
 
 ## 🎯 Current Status
 
-### ✅ Phase 6 Complete - Custom Domain & SSL
+### ✅ Phase 7 Complete - AI-Powered Symptom Checker
 
 | Component            | Status        | Function                   | Region     |
 | -------------------- | ------------- | -------------------------- | ---------- |
@@ -73,16 +76,19 @@ MediSecure Cloud addresses healthcare coordination challenges in Qatar and the M
 | **S3 Hosting**       | ✅ Active     | Static website (encrypted) | us-east-1  |
 | **AWS Amplify**      | ✅ Integrated | Authentication service     | Configured |
 | **AWS Cognito**      | ✅ Active     | JWT token management       | ap-south-1 |
-| **API Gateway**      | ✅ Active     | Secured REST endpoints     | ap-south-1 |
-| **Lambda Functions** | ✅ Deployed   | Patient & auth handlers    | me-south-1 |
+| **API Gateway**      | ✅ Active     | Secured REST endpoints     | me-south-1 |
+| **Lambda Functions** | ✅ Deployed   | Patient, auth & AI handlers| me-south-1 |
 | **DynamoDB**         | ✅ Active     | Patient data with GSI      | me-south-1 |
 | **CloudFront**       | ✅ Active     | Global CDN + security      | Global     |
+| **AWS Bedrock**      | ✅ Active     | AI symptom analysis        | ap-south-1 |
+| **AI Features**      | ✅ LIVE       | Bilingual (AR/EN) analysis | Global     |
 
 ### 🔧 Deployed Lambda Functions
 
 - **MediSecurePatientFunction** - Patient CRUD operations
 - **MediSecure-UserRegistration** - User registration handler
 - **MediSecure-UserLogin** - Authentication handler
+- **MediSecure-AI-SymptomAnalysis** - AI-powered symptom checker (NEW)
 
 ## 🚀 Try it Now (2 minutes)
 
@@ -93,6 +99,25 @@ MediSecure Cloud addresses healthcare coordination challenges in Qatar and the M
 # 📡 CloudFront: https://d1aaifqtlfz7l5.cloudfront.net
 # 🔑 Login: test@medisecure.dev / TempPass123!
 # ✅ SSL Certificate & Professional Domain
+```
+
+### 🤖 AI Symptom Checker (NEW) ⚡
+
+```bash
+# Live AI API Endpoint (Bilingual: Arabic/English)
+curl -X POST https://pbfnwg7ty4.execute-api.me-south-1.amazonaws.com/prod/public/symptom-check \
+  -H "Content-Type: application/json" \
+  -d '{
+    "symptoms": {
+      "description": "I have a severe headache and feel dizzy",
+      "severity": 8,
+      "duration": "2 hours"
+    },
+    "language": "en"
+  }'
+
+# Arabic Example:
+# "symptoms": {"description": "صداع شديد ودوخة", "severity": 8}, "language": "ar"
 ```
 
 ### Option 2: Local Development
@@ -112,6 +137,20 @@ npm install && npm run dev
 cd infrastructure/cdk
 npm install && npm run build
 cdk deploy MediSecure-Hosting --require-approval never
+```
+
+### 🤖 AI Symptom Checker Demo
+
+```bash
+# Test English symptoms
+curl -X POST https://pbfnwg7ty4.execute-api.me-south-1.amazonaws.com/prod/public/symptom-check \
+  -H "Content-Type: application/json" \
+  -d '{"symptoms": {"description": "chest pain and difficulty breathing", "severity": 9}, "language": "en"}'
+
+# Test Arabic symptoms  
+curl -X POST https://pbfnwg7ty4.execute-api.me-south-1.amazonaws.com/prod/public/symptom-check \
+  -H "Content-Type: application/json" \
+  -d '{"symptoms": {"description": "صداع شديد وغثيان", "severity": 7}, "language": "ar"}'
 ```
 
 ## 📁 Project Structure
@@ -140,6 +179,15 @@ medisecure-cloud-platform/
 
 ## 💡 Key Features
 
+### 🤖 AI-Powered Health Assistant (NEW)
+
+- **Live API**: Real-time symptom analysis via AWS Bedrock
+- **Bilingual Support**: Native Arabic and English processing
+- **Smart Triage**: Automated severity assessment (Low/Medium/High/Emergency)
+- **Model Resilience**: Claude 3 Haiku (primary) + Amazon Titan (fallback)
+- **Anonymous Access**: Public health education without registration
+- **Qatar-Optimized**: Mumbai region deployment for optimal Gulf latency
+
 ### 🔐 Security & Compliance
 
 - HIPAA-ready architecture with end-to-end encryption
@@ -153,6 +201,7 @@ medisecure-cloud-platform/
 - Medical history and test results access
 - Appointment booking and management
 - Emergency contact integration
+- AI symptom checker integration
 
 ### 👩‍⚕️ Healthcare Provider Dashboard
 
@@ -160,6 +209,7 @@ medisecure-cloud-platform/
 - Digital consultation notes
 - Lab test ordering system
 - Vital signs monitoring
+- AI-assisted diagnosis suggestions
 
 ## 🛠️ Technology Stack
 
@@ -176,6 +226,7 @@ medisecure-cloud-platform/
 - DynamoDB (single-table design)
 - API Gateway with CORS
 - AWS Cognito for auth
+- AWS Bedrock AI (Claude 3 Haiku + Titan fallback)
 
 **Infrastructure**
 
@@ -184,7 +235,7 @@ medisecure-cloud-platform/
 - S3 static hosting
 - Multi-region deployment
 - CloudWatch monitoring
-- 100% AWS Free Tier usage
+- AI optimized for <$1/month cost
 
 ## 📈 Development Roadmap
 
@@ -195,10 +246,14 @@ medisecure-cloud-platform/
 - **Phase 3** - React frontend with modern healthcare UI/UX
 - **Phase 4** - Full-stack integration with authentication flow
 - **Phase 5** - Production deployment with CloudFront CDN
+- **Phase 6** - Custom domain & SSL certificate setup
+- **Phase 7** - AI-powered symptom checker with AWS Bedrock
 
 ### Next Phase 🚧
 
-- **Phase 6** - Advanced features (IoT integration, mobile app, analytics)
+- **Phase 8** - IoT integration for real-time vital signs monitoring
+- **Phase 9** - Mobile app development (React Native)
+- **Phase 10** - Analytics dashboard with QuickSight
 
 ## 💰 Cost Optimization Results
 

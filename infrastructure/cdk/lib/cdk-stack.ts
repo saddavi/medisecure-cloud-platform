@@ -28,7 +28,9 @@ export class MediSecureStack extends cdk.Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
 
       // Data Protection: Point-in-time recovery for critical medical data
-      pointInTimeRecovery: true,
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: true,
+      },
 
       // Compliance: Enable deletion protection for production
       deletionProtection: true,
@@ -80,6 +82,20 @@ export class MediSecureStack extends cdk.Stack {
       },
     });
 
+    // ============= Anonymous Sessions Table =============
+    // Separate table for public symptom checker sessions
+    const publicSymptomSessions = new dynamodb.Table(this, "PublicSymptomSessions", {
+      tableName: "MediSecure-Public-Symptom-Sessions",
+      partitionKey: { 
+        name: "sessionId", 
+        type: dynamodb.AttributeType.STRING 
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // Cost-effective for variable traffic
+      timeToLiveAttribute: "ttl", // Auto-delete sessions after 24 hours
+      encryption: dynamodb.TableEncryption.AWS_MANAGED, // Compliance without extra cost
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // Safe for development
+    });
+
     // ============= IAM Role for Lambda Functions =============
     const lambdaRole = new iam.Role(this, "MediSecure-Lambda-Role", {
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
@@ -92,6 +108,7 @@ export class MediSecureStack extends cdk.Stack {
 
     // Grant DynamoDB permissions with least privilege
     healthDataTable.grantReadWriteData(lambdaRole);
+    publicSymptomSessions.grantReadWriteData(lambdaRole);
 
     // Grant AWS Bedrock permissions for AI symptom analysis
     lambdaRole.addToPolicy(
@@ -118,7 +135,7 @@ export class MediSecureStack extends cdk.Stack {
       "MediSecure-PatientManagement",
       {
         runtime: lambda.Runtime.NODEJS_20_X, // Updated from deprecated Node.js 18
-        handler: "patient-management.handler",
+        handler: "patient/patient-management.handler",
         code: lambda.Code.fromAsset("../../backend/dist"),
         role: lambdaRole,
         environment: {
@@ -137,7 +154,7 @@ export class MediSecureStack extends cdk.Stack {
       "MediSecure-MedicalRecords",
       {
         runtime: lambda.Runtime.NODEJS_20_X, // Updated from deprecated Node.js 18
-        handler: "medical-records.handler",
+        handler: "medical/medical-records.handler",
         code: lambda.Code.fromAsset("../../backend/dist"),
         role: lambdaRole,
         environment: {
@@ -147,6 +164,29 @@ export class MediSecureStack extends cdk.Stack {
         },
         timeout: cdk.Duration.seconds(30),
         memorySize: 256,
+      }
+    );
+
+    // AI Symptom Analysis Lambda - Optimized for portfolio performance
+    const aiSymptomAnalysisFunction = new lambda.Function(
+      this,
+      "MediSecure-AI-SymptomAnalysis",
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: "ai/anonymous-symptom-analysis.handler", // Updated path
+        code: lambda.Code.fromAsset("../../backend/dist"),
+        role: lambdaRole,
+        environment: {
+          DYNAMODB_TABLE_NAME: healthDataTable.tableName,
+          ANONYMOUS_SESSIONS_TABLE: publicSymptomSessions.tableName,
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1",
+          DEPLOYMENT_REGION: "me-south-1",
+          // Bedrock configuration
+          BEDROCK_MODEL_ID: "anthropic.claude-3-haiku-20240307-v1:0",
+          BEDROCK_REGION: "ap-south-1", // Using Mumbai for optimal Qatar latency
+        },
+        timeout: cdk.Duration.seconds(45), // AI calls need more time
+        memorySize: 512, // Your strategic choice for portfolio performance
       }
     );
 
@@ -198,15 +238,37 @@ export class MediSecureStack extends cdk.Stack {
       new apigateway.LambdaIntegration(medicalRecordsFunction)
     );
 
+    // Public endpoints for anonymous access
+    const publicResource = api.root.addResource("public");
+    const symptomCheckResource = publicResource.addResource("symptom-check");
+    
+    // AI Symptom Analysis endpoint - No authentication required
+    symptomCheckResource.addMethod(
+      "POST",
+      new apigateway.LambdaIntegration(aiSymptomAnalysisFunction)
+    );
+    
+    // Note: OPTIONS method is automatically created by API Gateway's CORS configuration
+
     // ============= Outputs =============
     new cdk.CfnOutput(this, "DynamoDBTableName", {
       value: healthDataTable.tableName,
       description: "Name of the DynamoDB table for healthcare data",
     });
 
+    new cdk.CfnOutput(this, "AnonymousSessionsTableName", {
+      value: publicSymptomSessions.tableName,
+      description: "Name of the DynamoDB table for anonymous symptom sessions",
+    });
+
     new cdk.CfnOutput(this, "APIGatewayURL", {
       value: api.url,
       description: "URL of the API Gateway for healthcare endpoints",
+    });
+
+    new cdk.CfnOutput(this, "SymptomCheckerEndpoint", {
+      value: `${api.url}public/symptom-check`,
+      description: "Public endpoint for AI symptom analysis",
     });
 
     new cdk.CfnOutput(this, "LambdaRoleArn", {

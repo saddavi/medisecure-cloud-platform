@@ -96,10 +96,23 @@ const PublicSymptomChecker: React.FC = () => {
     setError(null);
 
     try {
-      // Replace with your actual API Gateway endpoint
+      // Live AI API endpoint
       const API_ENDPOINT =
         process.env.REACT_APP_API_URL ||
-        "https://your-api-gateway-url.amazonaws.com/prod";
+        "https://pbfnwg7ty4.execute-api.me-south-1.amazonaws.com/prod";
+
+      console.log("Making API request to:", `${API_ENDPOINT}/public/symptom-check`);
+      console.log("Request payload:", {
+        symptoms: {
+          description: symptomData.description,
+          severity: symptomData.severity,
+          duration: symptomData.duration,
+        },
+        language: symptomData.language,
+      });
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
 
       const response = await fetch(`${API_ENDPOINT}/public/symptom-check`, {
         method: "POST",
@@ -113,33 +126,111 @@ const PublicSymptomChecker: React.FC = () => {
             severity: symptomData.severity,
             duration: symptomData.duration,
           },
-          patientContext: {
-            age: symptomData.age,
-            gender: symptomData.gender,
-          },
-          isAnonymous: true,
           language: symptomData.language,
         }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
+      console.log("API Response status:", response.status);
+      console.log("API Response headers:", Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error("API Error response:", errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
       const data = await response.json();
+      console.log("API Response data:", data);
 
-      if (data.success && data.data) {
-        setAnalysisResult(data.data);
+      if (data.success && data.analysis) {
+        // Parse the AI response to extract structured data
+        let parsedAnalysis = "Analysis completed";
+        let severity = "Medium";
+        let recommendations = "Consult healthcare provider";
+        let urgencyScore = 5;
+        
+        try {
+          const aiResponse = data.analysis.aiResponse || "";
+          
+          // Extract JSON from the tabular-data-json block
+          const jsonMatch = aiResponse.match(/```tabular-data-json\n([\s\S]*?)\n```/);
+          if (jsonMatch) {
+            const parsedData = JSON.parse(jsonMatch[1]);
+            if (parsedData.rows && parsedData.rows[0]) {
+              const row = parsedData.rows[0];
+              parsedAnalysis = row.Analysis || "Analysis completed";
+              severity = row.UrgencyLevel || "Medium";
+              recommendations = Array.isArray(row.Recommendations) 
+                ? row.Recommendations.join(", ") 
+                : "Consult healthcare provider";
+              
+              // Map urgency level to score
+              const urgencyMap: { [key: string]: number } = {
+                low: 3,
+                medium: 5,
+                high: 8,
+                urgent: 10
+              };
+              urgencyScore = urgencyMap[severity.toLowerCase()] || 5;
+            }
+          } else {
+            // Fallback to raw AI response if parsing fails
+            parsedAnalysis = aiResponse;
+          }
+        } catch (parseError) {
+          console.warn("Failed to parse AI response:", parseError);
+          parsedAnalysis = data.analysis.aiResponse || "Analysis completed";
+        }
+        
+        // Transform the API response to match our component interface
+        const transformedResult: AnonymousSymptomResponse = {
+          analysis: parsedAnalysis,
+          severity: (severity.charAt(0).toUpperCase() + severity.slice(1)) as "Low" | "Medium" | "High" | "Emergency",
+          urgencyScore,
+          recommendations: {
+            action: recommendations,
+            timeframe: urgencyScore > 7 ? "Immediately" : urgencyScore > 5 ? "Within 24 hours" : "Within a few days",
+          },
+          generalAdvice: "Please follow the recommendations provided",
+          whenToSeekHelp: urgencyScore > 7 ? "Seek immediate medical attention" : "If symptoms worsen or persist",
+          registrationPrompt: "Create an account for personalized health tracking",
+          sessionId: data.sessionId,
+          language: symptomData.language,
+        };
+        
+        setAnalysisResult(transformedResult);
         setCurrentView("results");
       } else {
         throw new Error(data.error?.message || "Analysis failed");
       }
     } catch (err) {
       console.error("Symptom analysis error:", err);
+      
+      let errorMessage = "An error occurred while analyzing symptoms. Please try again.";
+      
+      if (err instanceof Error) {
+        console.error("Error details:", {
+          name: err.name,
+          message: err.message,
+          stack: err.stack
+        });
+        
+        if (err.name === 'AbortError') {
+          errorMessage = "Request timed out. Please try again.";
+        } else if (err.message.includes('Failed to fetch')) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else if (err.message.includes('CORS')) {
+          errorMessage = "Configuration error. Please contact support.";
+        }
+      }
+      
       setError(
         language === "ar"
           ? "حدث خطأ أثناء تحليل الأعراض. يرجى المحاولة مرة أخرى."
-          : "An error occurred while analyzing symptoms. Please try again."
+          : errorMessage
       );
     } finally {
       setIsLoading(false);

@@ -184,8 +184,24 @@ export function LoginPage() {
           </form>
         </div>
 
+        {/* AI Symptom Checker Link */}
+        <div className="mt-6 text-center">
+          <Link
+            to="/symptom-checker"
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-medium rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all transform hover:scale-105 shadow-lg"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Try FREE AI Symptom Checker (No Login Required)
+          </Link>
+          <p className="mt-2 text-sm text-neutral-600">
+            🤖 Powered by AWS Bedrock AI • Bilingual Arabic/English Support
+          </p>
+        </div>
+
         {/* Personal Portfolio Branding */}
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-2 mt-8">
           <p className="text-sm font-medium text-primary-600">
             AWS Cloud Engineering Portfolio Project by Talha Nasiruddin
           </p>

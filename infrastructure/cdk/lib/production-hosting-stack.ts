@@ -152,7 +152,7 @@ export class ProductionHostingStack extends cdk.Stack {
         additionalBehaviors: {
           "/api/*": {
             origin: new origins.HttpOrigin(
-              "e8x7hxtrul.execute-api.ap-south-1.amazonaws.com",
+              "pbfnwg7ty4.execute-api.me-south-1.amazonaws.com",
               {
                 customHeaders: {
                   "X-Custom-Header": "MediSecure-API",
@@ -341,7 +341,7 @@ export class ProductionHostingStack extends cdk.Stack {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https:",
-              "connect-src 'self' https://e8x7hxtrul.execute-api.ap-south-1.amazonaws.com https://cognito-idp.ap-south-1.amazonaws.com",
+              "connect-src 'self' https://pbfnwg7ty4.execute-api.me-south-1.amazonaws.com https://cognito-idp.ap-south-1.amazonaws.com",
             ].join("; "),
             override: true,
           },

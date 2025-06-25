@@ -21,6 +21,7 @@ import CreatePatient from "./pages/CreatePatient";
 import EditPatient from "./pages/EditPatient";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/common/ErrorBoundary";
+import PublicSymptomChecker from "./pages/public/PublicSymptomChecker";
 import { runIntegrationTests } from "./utils/testIntegration";
 import DevTestPanel from "./components/dev/DevTestPanel";
 
@@ -69,6 +70,7 @@ const App: React.FC = () => {
                 {/* Public Routes */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/symptom-checker" element={<PublicSymptomChecker />} />
 
                 {/* Protected Routes */}
                 <Route element={<ProtectedRoute />}>
