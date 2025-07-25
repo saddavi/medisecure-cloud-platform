@@ -51,8 +51,8 @@ export class BedrockClient {
     // Try Claude first (preferred for medical analysis)
     const claudeModel = "anthropic.claude-3-haiku-20240307-v1:0";
     
-    // Fallback to Titan (always available)
-    const titanModel = "amazon.titan-text-lite-v1";
+    // Fallback to Nova Lite using cross-region inference profile for Asia Pacific
+    const novaModel = "ap-south-1.amazon.nova-lite-v1:0";
     
     try {
       // Test Claude access with a minimal request
@@ -71,8 +71,8 @@ export class BedrockClient {
       console.log("✅ Using Claude 3 Haiku for medical analysis");
       return { modelId: claudeModel, isClaudeModel: true };
     } catch (error) {
-      console.log("⚠️ Claude not available, falling back to Titan");
-      return { modelId: titanModel, isClaudeModel: false };
+      console.log("⚠️ Claude not available, falling back to Nova Lite");
+      return { modelId: novaModel, isClaudeModel: false };
     }
   }
 
@@ -114,14 +114,12 @@ export class BedrockClient {
           }],
         };
       } else {
-        // Titan format
+        // Nova format
         requestBody = {
-          inputText: prompt,
-          textGenerationConfig: {
-            maxTokenCount: this.config.maxTokens,
-            temperature: this.config.temperature,
-            topP: 0.9,
-          }
+          prompt: prompt,
+          maxTokens: this.config.maxTokens,
+          temperature: this.config.temperature,
+          topP: 0.9,
         };
       }
 
@@ -137,7 +135,7 @@ export class BedrockClient {
 
       const aiText = isClaudeModel 
         ? responseBody.content[0].text 
-        : responseBody.results[0].outputText;
+        : responseBody.completion;
 
       return this.parseAIResponse(aiText, language);
     } catch (error) {
