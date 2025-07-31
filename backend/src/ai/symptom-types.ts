@@ -68,7 +68,7 @@ export interface AISymptomAnalysis {
   emergencyWarning?: string;
   confidenceScore: number; // 0-1, AI confidence in analysis
   language: "en" | "ar";
-  timestamp: Date;
+  timestamp: string; // ISO string for DynamoDB compatibility
   sessionId: string;
 }
 

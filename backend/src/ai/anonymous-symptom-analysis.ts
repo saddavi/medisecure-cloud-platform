@@ -151,7 +151,7 @@ export const handler = async (
       aiAnalysis: {
         ...aiAnalysis,
         sessionId,
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
         confidenceScore: 0.8, // Default confidence score for anonymous analysis
         recommendations: {
           ...aiAnalysis.recommendations,
@@ -161,7 +161,7 @@ export const handler = async (
       isAnonymous: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      ttl: Math.floor(anonymousSession.expiresAt.getTime() / 1000), // DynamoDB TTL
+      ttl: Math.floor(new Date(anonymousSession.expiresAt).getTime() / 1000), // DynamoDB TTL
       culturalContext: "qatar",
     };
 
