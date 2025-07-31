@@ -145,59 +145,23 @@ const PublicSymptomChecker: React.FC = () => {
       const data = await response.json();
       console.log("API Response data:", data);
 
-      if (data.success && data.analysis) {
-        // Parse the AI response to extract structured data
-        let parsedAnalysis = "Analysis completed";
-        let severity = "Medium";
-        let recommendations = "Consult healthcare provider";
-        let urgencyScore = 5;
-        
-        try {
-          const aiResponse = data.analysis.aiResponse || "";
-          
-          // Extract JSON from the tabular-data-json block
-          const jsonMatch = aiResponse.match(/```tabular-data-json\n([\s\S]*?)\n```/);
-          if (jsonMatch) {
-            const parsedData = JSON.parse(jsonMatch[1]);
-            if (parsedData.rows && parsedData.rows[0]) {
-              const row = parsedData.rows[0];
-              parsedAnalysis = row.Analysis || "Analysis completed";
-              severity = row.UrgencyLevel || "Medium";
-              recommendations = Array.isArray(row.Recommendations) 
-                ? row.Recommendations.join(", ") 
-                : "Consult healthcare provider";
-              
-              // Map urgency level to score
-              const urgencyMap: { [key: string]: number } = {
-                low: 3,
-                medium: 5,
-                high: 8,
-                urgent: 10
-              };
-              urgencyScore = urgencyMap[severity.toLowerCase()] || 5;
-            }
-          } else {
-            // Fallback to raw AI response if parsing fails
-            parsedAnalysis = aiResponse;
-          }
-        } catch (parseError) {
-          console.warn("Failed to parse AI response:", parseError);
-          parsedAnalysis = data.analysis.aiResponse || "Analysis completed";
-        }
+      if (data.success && data.data) {
+        // Use the structured response from the updated backend
+        const analysisData = data.data;
         
         // Transform the API response to match our component interface
         const transformedResult: AnonymousSymptomResponse = {
-          analysis: parsedAnalysis,
-          severity: (severity.charAt(0).toUpperCase() + severity.slice(1)) as "Low" | "Medium" | "High" | "Emergency",
-          urgencyScore,
+          analysis: analysisData.analysis || "Analysis completed",
+          severity: (analysisData.severity?.charAt(0).toUpperCase() + analysisData.severity?.slice(1)) as "Low" | "Medium" | "High" | "Emergency",
+          urgencyScore: analysisData.urgencyScore || 5,
           recommendations: {
-            action: recommendations,
-            timeframe: urgencyScore > 7 ? "Immediately" : urgencyScore > 5 ? "Within 24 hours" : "Within a few days",
+            action: analysisData.recommendations?.action || "Consult healthcare provider",
+            timeframe: analysisData.recommendations?.timeframe || "Within 24-48 hours",
           },
-          generalAdvice: "Please follow the recommendations provided",
-          whenToSeekHelp: urgencyScore > 7 ? "Seek immediate medical attention" : "If symptoms worsen or persist",
-          registrationPrompt: "Create an account for personalized health tracking",
-          sessionId: data.sessionId,
+          generalAdvice: analysisData.generalAdvice || "Please follow the recommendations provided",
+          whenToSeekHelp: analysisData.whenToSeekHelp || "If symptoms worsen or persist",
+          registrationPrompt: analysisData.registrationPrompt || "Create an account for personalized health tracking",
+          sessionId: data.sessionId || analysisData.sessionId,
           language: symptomData.language,
         };
         

@@ -74,8 +74,11 @@ export const handler = async (
       };
     }
 
-    // Rate limiting check
-    const clientIP = event.requestContext.identity.sourceIp || "unknown";
+    // Rate limiting check - Emergency null safety
+    const clientIP = event.requestContext?.identity?.sourceIp || 
+                     event.headers?.['x-forwarded-for']?.split(',')[0] || 
+                     event.headers?.['x-real-ip'] || 
+                     "anonymous";
     const rateLimitError = checkRateLimit(clientIP);
     if (rateLimitError) {
       return {
@@ -103,7 +106,8 @@ export const handler = async (
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours TTL
       ipAddress: clientIP,
-      userAgent: event.requestContext.identity.userAgent || undefined,
+      userAgent: event.requestContext?.identity?.userAgent || 
+                event.headers?.['user-agent'] || "unknown",
       convertedToPatient: false,
     };
 
