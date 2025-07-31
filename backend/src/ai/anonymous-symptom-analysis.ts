@@ -141,12 +141,9 @@ export const handler = async (
       language: request.language,
     };
 
-    // Store session data in DynamoDB with TTL
-    const sessionRecord: SymptomAnalysisRecord = {
-      PK: `ANONYMOUS_SESSION#${sessionId}`,
-      SK: `SYMPTOM_CHECK#${Date.now()}`,
-      GSI1PK: "ANONYMOUS_SESSIONS",
-      GSI1SK: new Date().toISOString(),
+    // Store session data in DynamoDB with TTL - match table schema
+    const sessionRecord = {
+      sessionId, // Primary key as expected by table
       symptoms: [request.symptoms],
       aiAnalysis: {
         ...aiAnalysis,
@@ -158,11 +155,13 @@ export const handler = async (
           specialist: aiAnalysis.recommendations.specialist as any, // Type assertion for flexibility
         },
       },
+      language: request.language,
       isAnonymous: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ttl: Math.floor(new Date(anonymousSession.expiresAt).getTime() / 1000), // DynamoDB TTL
       culturalContext: "qatar",
+      ipAddress: clientIP,
     };
 
     await dynamoService.putItem(sessionRecord);
